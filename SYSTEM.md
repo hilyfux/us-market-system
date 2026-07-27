@@ -236,7 +236,7 @@ CORE（引自 strategy-playbook VERSION 2.0.0）：
 - 结构：`knowledge/index.md`（总目录）｜`tickers/<SYM>.md`（每标的：论点/关键位/财报史/教训）｜`regime/<YYYY-MM>.md`（环境演变）｜`reviews/<YYYY-MM-DD>.md`（每日复盘）｜`lessons.md`（跨标的持久教训，L-xxx 编号，只增不删）。
 - 闭环（实现 `lib/knowledge.py`，有测试）：MORNING/POST_CLOSE **决策前读**相关标的页与 lessons，**决策后回写**"事实→动作→理由"；POST_CLOSE 每交易日写复盘并回填昨日"待验证"项。盘前/盘中只读。
 - 纪律：增量追加不覆盖；幂等（相同记录不重复）；事实带 as-of 与来源；教训必须写成"下次遇到 X 就做 Y"才能进 lessons.md；缺页返回 None、不臆造。
-- 版本化：`knowledge/` 随仓库进 git（`hilyfux/us-market-system`），复盘历史即策略演化史。
+- 版本化：`knowledge/` 随仓库进 git（`hilyfux/us-market-system`），复盘历史即策略演化史。POST_CLOSE 状态写入后做**本地 commit**（沙箱无网不 push），并在盘后报告末尾提醒待推送提交数（`git rev-list --count @{u}..HEAD`，离线可算）；push 由用户在本机执行。
 
 ## 8. 变更记录
 
