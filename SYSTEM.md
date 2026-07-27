@@ -1,6 +1,6 @@
 # 美股决策系统 · 总纲（SYSTEM.md）
 
-canonical_spec_version: 2.5
+canonical_spec_version: 2.6
 derived_from: strategy-playbook VERSION 2.0.0
 last_updated: 2026-07-27
 state_root: /Users/linqing.wang/Desktop/Claude/us-stock-system
@@ -240,6 +240,7 @@ CORE（引自 strategy-playbook VERSION 2.0.0）：
 
 ## 8. 变更记录
 
+- 2026-07-27 · v2.6 — **git 推送自动化**（复用 §9 outbox 模式；沙箱无网 + ~/Desktop 受 TCC 保护，与企业微信推送同构）。POST_CLOSE 本地提交后出包 `git bundle` 至 `~/.local/share/us-stock-git/outgoing.bundle`（tmp+rename 原子写）；本机 launchd `com.linqingwang.us-stock-gitpush`（每 5 分钟，脚本 `~/.local/bin/us-stock-git-pusher.sh`）verify → **密钥守卫**（待推提交含 ≥20 位真实 webhook key 即拒推、响亮记日志；占位符/测试 key 放行，守卫已双向测试）→ fast-forward push。成功安静；失败留 📦 手动提醒兜底且不阻断报告。端到端已在沙箱验证（bundle 78KB、fetch 头一致 b3afb2a、历史无真实 key）。卸载=删脚本+plist+目录。
 - 2026-07-27 · v2.5 — **知识库闭环上线**（§12，模式来自 nashsu/llm_wiki）。新增 `knowledge/` wiki（index/tickers×8/regime/reviews/lessons，已按 2026-07-24 数据播种）与 `lib/knowledge.py`（增量追加、幂等、非法输入拒绝、summary，9 条测试）；SKILL 在 MORNING/POST_CLOSE 强制「读-决策-回写」闭环，POST_CLOSE 每交易日写复盘并回填待验证项。`quote_extract` 7 条 + 槽位 1 条 + 知识 9 条，selftest 92→101 全绿。仓库将推送至 hilyfux/us-market-system（system-state.md 因含 webhook 密钥被 gitignore，另附 example 模板）。
 - 2026-07-27 · v2.4 — **模拟盘独立槽位 + 硬约束显式化**。用户明确硬约束：模拟盘初始资金 US$100,000、最多 8 持仓。`slot_report()` 改为 8 槽风险预算**只对模拟持仓计数**，真实持仓单列 `real_tracked`、不占模拟预算（解除"5 真实仓占满、8.5 万现金无槽可用"的结构性死锁）。`tools/selftest.py` 更新 test_slots 至新契约并加 1 例（真实仓数量已知也不占模拟槽），91→92 全绿。**未决（须用户显式授权的红线变更）**：用户提出"盘前设止盈止损、盘中做交易决策、收到信息即可下单"，与现行契约冲突（§3/§4/§10：模拟交易仅 MORNING/POST_CLOSE 可执行，盘前/盘中只分析、不落账）；且 §10 已实测盘中抓取行情不可靠。此项**未实施**，等待显式授权与（若开放盘中执行）可靠行情源 + 对应红线测试。
 - 2026-07-27 · v2.3 — **盘前自检发现的一轮优化**。(1) L4 lint 增加**条件/检查语境守卫**（`_CONDITIONAL`）：前瞻检查条件里的动作词（“若…再议减仓”）不再误判，同时保留对当下未标注交易动作的检出力。(2) 新增 `lib/quote_extract.py`：把抓回的行情页文本确定性去噪成 价格/涨跌/as-of/盘后/前收盘 小字典，治理“整页新闻流噪声”，未命中字段返回 None（宁缺勿造）。(3) §5 新增两条**撰写纪律**（篇幅须主动压紧凑；动作词只写进动作行）。(4) 账本：用户确认五个真实持仓各为 US$10,000，RMBS 依已记录入场价 115.00 解冻（数量 86.9565），PWR/MP/BE/KTOS 因缺每股成交价仍冻结、待补（不臆造，CORE-003）。(5) 通知单通道单点：用户明确接受风险、暂不增设备用（§11）。`tools/selftest.py` 补 9 条断言（82→91 全绿）。
