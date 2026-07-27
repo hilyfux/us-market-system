@@ -1,0 +1,9 @@
+# system-state.md 含企业微信 webhook 密钥（单一真源）——绝不入库
+system-state.md
+system-state_wtest
+__pycache__/
+*.pyc
+.playwright/
+.*probe*
+.agent_wtest*
+.writeprobe*

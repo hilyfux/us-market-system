@@ -1,0 +1,229 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+integrity — 有检出力的账务校验、陈旧度看门狗、行情溯源
+
+替换旧的「账务守恒」检查。旧检查是恒等式：
+    现金 + 市值 = 总资产      (总资产本就由此定义)
+    累计盈亏 = 总资产 - 100000 (累计盈亏本就由此定义)
+它们恒返回 0.000000，包括在数据完全错误时，检出能力为 0。
+
+本模块提供的校验都能真正失败：
+    C1 市值重算   sum(qty x price) 对比存储市值
+    C2 现金溯源   initial - sum(cost_basis) 对比存储现金
+    C3 盈亏分解   sum(每仓未实现) 对比总未实现
+    C4 逐仓一致   每仓 market_value == qty x last_close
+    C5 成本一致   每仓 unrealized == market_value - cost_basis
+"""
+from datetime import date, datetime
+from decimal import Decimal
+from typing import Dict, List, Optional, Sequence
+
+TOLERANCE = Decimal("0.05")   # USD
+
+
+def D(x) -> Decimal:
+    return x if isinstance(x, Decimal) else Decimal(str(x))
+
+
+class CheckResult(object):
+    __slots__ = ("name", "passed", "expected", "actual", "diff", "detail", "severity")
+
+    def __init__(self, name, passed, expected=None, actual=None, detail="", severity="ERROR"):
+        self.name = name
+        self.passed = bool(passed)
+        self.expected = expected
+        self.actual = actual
+        self.diff = (D(actual) - D(expected)) if (expected is not None and actual is not None) else None
+        self.detail = detail
+        self.severity = severity
+
+    def __repr__(self):
+        s = "PASS" if self.passed else ("WARN" if self.severity == "WARN" else "FAIL")
+        base = "[%s] %s" % (s, self.name)
+        if self.diff is not None:
+            base += "  expected=%s actual=%s diff=%s" % (self.expected, self.actual, self.diff)
+        if self.detail:
+            base += "  — %s" % self.detail
+        return base
+
+
+def validate_accounting(wallet: Dict[str, object], positions: Sequence[Dict[str, object]],
+                        initial_capital="100000") -> List[CheckResult]:
+    """
+    wallet:    {cash, total_market_value, total_assets, cumulative_pnl,
+                realized_pnl, unrealized_pnl}
+    positions: 仅模拟持仓（真实持仓 quantity 未知，按 CORE 不计入钱包）
+               每项 {symbol, quantity, last_close, cost_basis, market_value, unrealized_pnl}
+    """
+    res = []
+    cash = D(wallet["cash"])
+    stored_mv = D(wallet["total_market_value"])
+    stored_total = D(wallet["total_assets"])
+    stored_cum = D(wallet["cumulative_pnl"])
+    stored_unreal = D(wallet.get("unrealized_pnl", 0))
+    realized = D(wallet.get("realized_pnl", 0))
+    init = D(initial_capital)
+
+    # C1 市值重算：从股数与收盘价独立重算，不信任存储值
+    recomputed = sum((D(p["quantity"]) * D(p["last_close"])).quantize(Decimal("0.000001"))
+                     for p in positions) if positions else Decimal(0)
+    res.append(CheckResult(
+        "C1 市值重算 sum(qty x price) vs 存储市值",
+        abs(recomputed - stored_mv) <= TOLERANCE, stored_mv, recomputed,
+        "有检出力：存储市值被篡改或漏更新即失败"))
+
+    # C2 现金溯源：现金必须能由初始资金减去全部成本基础复原
+    derived_cash = init - sum(D(p["cost_basis"]) for p in positions) if positions else init
+    res.append(CheckResult(
+        "C2 现金溯源 initial - sum(cost_basis) vs 存储现金",
+        abs(derived_cash - cash) <= TOLERANCE, cash, derived_cash,
+        "有检出力：幽灵交易、漏记成本、现金被手改均会失败"))
+
+    # C3 盈亏分解
+    sum_unreal = sum(D(p["unrealized_pnl"]) for p in positions) if positions else Decimal(0)
+    res.append(CheckResult(
+        "C3 盈亏分解 sum(每仓未实现) vs 总未实现",
+        abs(sum_unreal - stored_unreal) <= TOLERANCE, stored_unreal, sum_unreal))
+
+    # C4/C5 逐仓一致
+    for p in positions:
+        sym = p["symbol"]
+        mv_calc = (D(p["quantity"]) * D(p["last_close"])).quantize(Decimal("0.000001"))
+        res.append(CheckResult(
+            "C4 %s market_value == qty x last_close" % sym,
+            abs(mv_calc - D(p["market_value"])) <= TOLERANCE, D(p["market_value"]), mv_calc))
+        pnl_calc = (D(p["market_value"]) - D(p["cost_basis"])).quantize(Decimal("0.000001"))
+        res.append(CheckResult(
+            "C5 %s unrealized == market_value - cost_basis" % sym,
+            abs(pnl_calc - D(p["unrealized_pnl"])) <= TOLERANCE, D(p["unrealized_pnl"]), pnl_calc))
+
+    # 恒等式：保留但明确标注无检出力，供人工核对可读性
+    res.append(CheckResult(
+        "I1 恒等式 cash+mv==total（无检出力，仅可读性）",
+        abs((cash + stored_mv) - stored_total) <= TOLERANCE, stored_total, cash + stored_mv,
+        "identity, not a test", severity="WARN"))
+    res.append(CheckResult(
+        "I2 恒等式 total-initial==cum_pnl（无检出力）",
+        abs((stored_total - init) - stored_cum) <= TOLERANCE, stored_cum, stored_total - init,
+        "identity, not a test", severity="WARN"))
+    res.append(CheckResult(
+        "C6 累计盈亏 == 已实现 + 未实现",
+        abs((realized + stored_unreal) - stored_cum) <= TOLERANCE, stored_cum, realized + stored_unreal,
+        "有检出力：已实现/未实现拆分错误会失败"))
+    return res
+
+
+# --------------------------------------------------------------- 看门狗
+STALENESS_MAX_TRADING_DAYS = 1
+
+
+def staleness_check(valuation_date: str, today: date, cal, max_days=STALENESS_MAX_TRADING_DAYS) -> CheckResult:
+    """
+    2026-07 停摆的直接检出点：估值日落后最近交易日超过 max_days 即升级为故障。
+    证据当时就摆在 last_successful_official_settlement 里，但无人断言。
+    """
+    vd = date.fromisoformat(valuation_date)
+    last_td = today if cal.is_trading_day(today) else cal.prev_trading_day(today)
+    behind = cal.trading_days_between(vd, last_td)
+    ok = behind <= max_days
+    return CheckResult(
+        "W1 估值陈旧度",
+        ok, max_days, behind,
+        "估值日 %s 落后最近交易日 %s 共 %d 个交易日（上限 %d）%s" % (
+            vd.isoformat(), last_td.isoformat(), behind, max_days,
+            "" if ok else " -> STALE_VALUATION，须升级告警而非静默"))
+
+
+def liveness_check(last_run_iso: Optional[str], now: datetime, max_gap_min: int = 180) -> CheckResult:
+    """存活检查：系统无法报告『自己没在跑』，故需显式断言上次运行时间。"""
+    if not last_run_iso:
+        return CheckResult("W2 存活", False, max_gap_min, None,
+                           "无上次运行记录 -> 无法证明系统存活")
+    gap = (now - datetime.fromisoformat(last_run_iso)).total_seconds() / 60.0
+    return CheckResult("W2 存活", gap <= max_gap_min, max_gap_min, round(gap, 1),
+                       "距上次运行 %.1f 分钟" % gap)
+
+
+def queue_health(pending: Sequence[str], failed: Sequence[str], now: datetime,
+                 oldest_pending_age_min: Optional[float], max_age_min: int = 30) -> List[CheckResult]:
+    """死信与积压监控：failed/ 此前无人查看，.attempts 用尽后静默放弃。"""
+    res = [CheckResult("W3 死信目录 failed/ 为空", len(failed) == 0, 0, len(failed),
+                       "存在投递失败消息需人工处理：%s" % ", ".join(failed[:5]) if failed else "")]
+    if oldest_pending_age_min is not None:
+        res.append(CheckResult("W4 队列积压时长", oldest_pending_age_min <= max_age_min,
+                               max_age_min, round(oldest_pending_age_min, 1),
+                               "最旧待投递消息已等待 %.1f 分钟" % oldest_pending_age_min))
+    else:
+        res.append(CheckResult("W4 队列积压时长", True, max_age_min, 0, "队列为空"))
+    return res
+
+
+# --------------------------------------------------------------- 行情溯源
+BAD_SOURCES = {
+    "nasdaq.com": "JS 空壳", "cnbc.com": "JS 空壳", "finviz.com": "JS 空壳",
+    "zacks.com": "JS 空壳", "barchart.com": "JS 空壳",
+    "wsj.com": "抓取被拒", "marketwatch.com": "抓取被拒",
+    "markets.businessinsider.com": "抓取被拒",
+    "macrotrends.net": "数周陈旧", "wallstreetzen.com": "数周陈旧",
+    "stockinvest.us": "数周陈旧", "gurufocus.com": "数周陈旧",
+    "finance.yahoo.com": "报价页严重陈旧（非延迟）",
+    "home.treasury.gov": "所有端点均截断",
+}
+CACHE_BUSTER_REQUIRED = ("stockanalysis.com", "cdn.cboe.com")
+STAMP_CHECK_REQUIRED = ("stocktitan.net",)
+MAX_CROSS_SOURCE_PCT = Decimal("1.0")
+
+
+class PriceRecord(object):
+    """
+    按价格记录溯源。旧账本只存一个 last_close + VERIFIED，无来源无时间戳，
+    事后无法审计某个数字是谁给的 —— 而本次实测有多个来源在给错数
+    （缓存陈旧、盘中行冒充收盘），故溯源必须落到单价级别。
+    """
+    __slots__ = ("symbol", "session_date", "close", "sources", "note")
+
+    def __init__(self, symbol: str, session_date: str, close, sources: List[Dict[str, str]], note=""):
+        self.symbol = symbol
+        self.session_date = session_date
+        self.close = D(close)
+        self.sources = sources          # [{domain, figure, url, method}]
+        self.note = note
+
+    def validate(self) -> List[CheckResult]:
+        res = []
+        domains = {s["domain"] for s in self.sources}
+        res.append(CheckResult("P1 %s 独立来源 >=2" % self.symbol,
+                               len(domains) >= 2, 2, len(domains),
+                               "来源：%s" % ", ".join(sorted(domains))))
+        banned = domains & set(BAD_SOURCES)
+        res.append(CheckResult("P2 %s 未使用已知不可靠来源" % self.symbol,
+                               not banned, 0, len(banned),
+                               "命中黑名单：%s" % ", ".join(sorted(banned)) if banned else ""))
+        figs = [D(s["figure"]) for s in self.sources]
+        spread = (max(figs) - min(figs)) / min(figs) * 100 if figs and min(figs) > 0 else Decimal(0)
+        res.append(CheckResult("P3 %s 跨源偏差 <=%s%%" % (self.symbol, MAX_CROSS_SOURCE_PCT),
+                               spread <= MAX_CROSS_SOURCE_PCT, MAX_CROSS_SOURCE_PCT,
+                               spread.quantize(Decimal("0.0001"))))
+        for s in self.sources:
+            if any(d in s["domain"] for d in CACHE_BUSTER_REQUIRED) and "?" not in s.get("url", ""):
+                res.append(CheckResult("P4 %s %s 需带 cache-buster" % (self.symbol, s["domain"]),
+                                       False, "?v=N", "无",
+                                       "该域名曾返回数周前缓存", severity="WARN"))
+            if any(d in s["domain"] for d in STAMP_CHECK_REQUIRED) and not s.get("stamp"):
+                res.append(CheckResult("P5 %s %s 需核对 Last updated 戳" % (self.symbol, s["domain"]),
+                                       False, "stamp", "缺失",
+                                       "该站按标的冻结，曾出现整月陈旧", severity="WARN"))
+        return res
+
+    def to_dict(self):
+        return {"symbol": self.symbol, "session_date": self.session_date,
+                "close": str(self.close), "sources": self.sources, "note": self.note}
+
+
+def summarize(results: Sequence[CheckResult]) -> Dict[str, object]:
+    errs = [r for r in results if not r.passed and r.severity == "ERROR"]
+    warns = [r for r in results if not r.passed and r.severity == "WARN"]
+    return {"total": len(results), "failed": len(errs), "warned": len(warns),
+            "ok": not errs, "failures": [repr(r) for r in errs],
+            "warnings": [repr(r) for r in warns]}
