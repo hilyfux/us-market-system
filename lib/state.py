@@ -112,6 +112,23 @@ def webhook(root: str) -> str:
     return w
 
 
+def last_run_started(root: str):
+    """
+    从 system-state.md 提取最近一次运行的 actual_start（ISO，含时区）。
+    供 W2 存活检查用。找不到返回 None。`+0800` 一类无冒号时区归一化为 `+08:00`
+    （Python 3.10 的 fromisoformat 不认无冒号时区）。
+    """
+    t = _read(root, "system-state.md")
+    starts = re.findall(r"^actual_start:\s*(\S+)", t, re.M)
+    if not starts:
+        return None
+    s = starts[-1]
+    m = re.match(r"^(.*[+-]\d{2})(\d{2})$", s)
+    if m:
+        s = m.group(1) + ":" + m.group(2)
+    return s
+
+
 def load_all(root: str) -> Dict[str, object]:
     for n in FILES:
         _read(root, n)          # 任一缺失即抛 -> STATE_INTEGRITY_FAILURE

@@ -85,6 +85,37 @@ def run(now=None):
         report["delivered_to_reconcile"] = ob.reconcile_delivered_to_alert_state(
             st.alert_state_keys(ROOT), p)
 
+    # 4.5 W2 存活（WARN：不阻断——停摆恰恰是最需要跑起来的时刻）+ W5 git 管道（WARN）
+    try:
+        last = st.last_run_started(ROOT)
+        res = ig.liveness_check(last, now, max_gap_min=800)  # 最大排期空档 SGT 08:30->20:00 ≈690min + 余量
+        res.severity = "WARN"
+        add(res)
+    except Exception as e:                                    # noqa: BLE001
+        report["liveness_error"] = "%s: %s" % (type(e).__name__, e)
+    try:
+        gdir = os.environ.get("US_STOCK_GIT") or (
+            os.path.join(os.path.dirname(p), "us-stock-git") if p else None)
+        if gdir and os.path.isdir(gdir):
+            import hashlib as _h
+            import time as _t
+            b = os.path.join(gdir, "outgoing.bundle")
+            exists = os.path.isfile(b)
+            age = (_t.time() - os.path.getmtime(b)) / 60.0 if exists else None
+            stamp_p = os.path.join(gdir, ".last-pushed-bundle")
+            stamp_ok = False
+            if exists and os.path.isfile(stamp_p):
+                with open(b, "rb") as f:
+                    digest = _h.sha256(f.read()).hexdigest()
+                with open(stamp_p, encoding="utf-8") as f:
+                    stamp_ok = f.read().strip() == digest
+            errp = os.path.join(gdir, "pusher.err")
+            errb = os.path.getsize(errp) if os.path.isfile(errp) else 0
+            for res in ig.git_pipeline_check(exists, age, stamp_ok, errb):
+                add(res)
+    except Exception as e:                                    # noqa: BLE001
+        report["git_watchdog_error"] = "%s: %s" % (type(e).__name__, e)
+
     # 5. 调度对齐（防止再次出现「阶段永不触发」）
     #    必须采样「接下来的交易日」；若只采样今天，周末运行会把每个阶段都判成不可达。
     days, d = [], r["et"].date()

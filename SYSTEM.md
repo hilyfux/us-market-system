@@ -1,6 +1,6 @@
 # 美股决策系统 · 总纲（SYSTEM.md）
 
-canonical_spec_version: 2.6
+canonical_spec_version: 2.7
 derived_from: strategy-playbook VERSION 2.0.0
 last_updated: 2026-07-27
 state_root: /Users/linqing.wang/Desktop/Claude/us-stock-system
@@ -26,7 +26,7 @@ state_root: /Users/linqing.wang/Desktop/Claude/us-stock-system
 
 **每次运行的第一步必须是 `python3 tools/preflight.py`。** 退出码非 0 即不得进入任何
 阶段流程（不得交易、不得发正常报告、不得在别处初始化）。
-规范改动必须先在 `tools/selftest.py` 补用例并全绿（当前 101/101）；
+规范改动必须先在 `tools/selftest.py` 补用例并全绿（当前 114/114）；
 改阈值就是改策略，测试用例即策略的可执行定义。
 
 > 这是整套美股决策系统的**唯一共享规则源**。所有任务的 SKILL 只写"本任务独有的部分"，共享铁律一律以本文件为准。修改共享规则只改这里，不要在各 SKILL 里各写一份。
@@ -129,6 +129,7 @@ CORE（引自 strategy-playbook VERSION 2.0.0）：
 > 转发器实现见附录 §9；本节只规定 agent 的行为。
 
 - **"推送"的唯一动作 = 原子写 outbox 文件**，不得在沙箱内 curl/urlopen 企业微信。
+- **路径锚定（2026-07-27）**：真 outbox 含 `.anchor` 哨兵（内容 `us-stock-outbox v1`）。`assert_path_usable` 拒绝无锚/不存在目录、**绝不自动创建**——沙箱内 `~` 是沙箱 home，照抄宿主机路径会新建一个转发器永远不看的空 outbox（实测确认），锚定哨兵把这类静默丢失变成响亮的 `ENQUEUE_PATH_UNAVAILABLE`。SKILL 的 preflight 片段按锚定文件自动发现正确挂载路径。
 - webhook 从 `system-state.md` 的 `## Notification` 段读取（**单一真源、不得硬编码**），把读到的 URL 原样写进消息的 `webhook` 字段。
 - 顺序：**先写状态并重新读取校验，后写 outbox**（state_write_then_enqueue）。
 - **路径可用性探针的语义（2026-07-27 修正）**：`assert_path_usable()` 只验证 `enqueue()` 真正依赖的能力——建目录 + 原子写（写 `.tmp` 再 `rename`）+ 读回；这三者任一失败才判 `ENQUEUE_PATH_UNAVAILABLE`。`unlink`（仅用于清理探针）失败是**非致命**的：`enqueue()` 从不 unlink（归档/删除由宿主机转发器完成，那侧 unlink 正常），且部分沙箱 FUSE 挂载允许 open/write/rename 却拒绝 unlink（EPERM）。旧探针用 write-then-`remove`，把 unlink 当硬条件，会在 outbox 实际可用时**误报**并间歇性阻断健康运行（含可交易的 MORNING/PREMARKET）——由 `tools/selftest.py` 回归用例锁定。死信计数（`queue_state`/W3）同口径：`failed/` 里只有 `.json` 消息文件算死信，探针点文件（如 `.wp`）与 `failed/archive/` 归档子目录不计入。
@@ -211,16 +212,18 @@ CORE（引自 strategy-playbook VERSION 2.0.0）：
 | 机制 | 实现 | 检出对象 |
 |---|---|---|
 | W1 陈旧度断言 | `staleness_check()` | 估值日落后最近交易日 > 1 个交易日 → `STALE_VALUATION` |
-| W2 存活断言 | `liveness_check()` | 距上次运行超阈值 → 系统可能已停摆 |
+| W2 存活断言 | `liveness_check()`（已接入 preflight，WARN 级阈值 800min） | 距上次运行超阈值 → 系统可能已停摆；WARN 不阻断——停摆时恰恰最需要跑起来 |
 | W3 死信监控 | `queue_health()` | `failed/` 非空（此前无人查看） |
 | W4 积压监控 | `queue_health()` | 最旧待投递消息等待过久（转发器周期实测不稳定） |
 | 调度对齐证明 | `verify_schedule_alignment()` | 阶段不可达或 jitter 余量不足 |
 | 路径守卫 | `assert_path_usable()` | outbox 落在 TCC 保护区 → 拒绝启动 |
-| 每日存活心跳 | 见下 | 让"没消息"变成可判断的信号 |
+| W5 git 管道看门狗 | `git_pipeline_check()`（WARN 级） | bundle 出包后长时间未被转发器处理 / pusher.err 非空；git 故障绝不阻断交易 |
+| 路径锚定哨兵 | `assert_path_usable()` 的 `.anchor` 检查 | 沙箱 `~` 解析差异导致的「假 outbox 静默吞消息」（2026-07-27 实测确认后堵死：拒绝无锚目录、绝不自动创建） |
+| 每日存活心跳 | SKILL「否则」分支：ET 非交易日 SGT≥09:00 入队 `HEARTBEAT+<SGT日期>`（force=True，按日幂等）；交易日由 PREMARKET 必推覆盖 | 让"没消息"在任何日历日都成为可判断的信号 |
 
 **故障必须响亮**：所有失败都映射到具名升级项（`STATE_INTEGRITY_FAILURE` /
 `ENQUEUE_PATH_UNAVAILABLE` / `STALE_VALUATION` / `SCHEDULE_MISALIGNED` /
-`MARKET_DATA_DEGRADED`），由 `tools/preflight.py` 统一输出，退出码非 0 即阻断。
+`MARKET_DATA_DEGRADED`），由 `tools/preflight.py` 统一输出，退出码非 0 即阻断。WARN 级（W2/W5）只示警不阻断。
 
 **仍存在的单点**（已知，未消除，不假装已解决）：
 1. `~/.local/share` 挂载是入队前提；缺失时记 `ENQUEUE_PATH_UNAVAILABLE` 并结束（响亮失败）。
@@ -240,6 +243,7 @@ CORE（引自 strategy-playbook VERSION 2.0.0）：
 
 ## 8. 变更记录
 
+- 2026-07-27 · v2.7 — **高可用体检：修 1 个致命陷阱 + 4 处文档-代码矛盾**。(1) **锚定哨兵**：实测确认沙箱 `~` 差异会让旧 `assert_path_usable` 在错误 home **新建空 outbox 并通过**（消息静默丢失，正是 §5 要杜绝的事故类别）——现要求 `.anchor` 哨兵、拒绝无锚目录、绝不自动创建；SKILL preflight 片段改为按锚定自动发现挂载路径。(2) **W2 存活接入 preflight**（此前 lib 有定义但从未被调用，与 §11“preflight 统一输出”矛盾；WARN 级阈值 800min 覆盖最大排期空档，不阻断）。(3) **新增 W5 git 管道看门狗**（WARN：bundle 滞留/pusher.err 非空；v1 pusher 的静默跳过类 bug 属此检出域）。(4) **每日存活心跳落地**（§11 原文“见下”悬空：ET 非交易日 SGT≥09:00 入队 `HEARTBEAT+日期`，堵住周日 MORNING 去重导致的静默日）。(5) SKILL 盘中节奏补写 §10 三锚点（原文欠缺）。`state.last_run_started()` 归一化 `+0800` 时区。selftest 101→114 全绿。
 - 2026-07-27 · v2.6 — **git 推送自动化**（复用 §9 outbox 模式；沙箱无网 + ~/Desktop 受 TCC 保护，与企业微信推送同构）。POST_CLOSE 本地提交后出包 `git bundle` 至 `~/.local/share/us-stock-git/outgoing.bundle`（tmp+rename 原子写）；本机 launchd `com.linqingwang.us-stock-gitpush`（每 5 分钟，脚本 `~/.local/bin/us-stock-git-pusher.sh`）verify → **密钥守卫**（待推提交含 ≥20 位真实 webhook key 即拒推、响亮记日志；占位符/测试 key 放行，守卫已双向测试）→ fast-forward push。成功安静；失败留 📦 手动提醒兜底且不阻断报告。端到端已在沙箱验证（bundle 78KB、fetch 头一致 b3afb2a、历史无真实 key）。卸载=删脚本+plist+目录。
 - 2026-07-27 · v2.5 — **知识库闭环上线**（§12，模式来自 nashsu/llm_wiki）。新增 `knowledge/` wiki（index/tickers×8/regime/reviews/lessons，已按 2026-07-24 数据播种）与 `lib/knowledge.py`（增量追加、幂等、非法输入拒绝、summary，9 条测试）；SKILL 在 MORNING/POST_CLOSE 强制「读-决策-回写」闭环，POST_CLOSE 每交易日写复盘并回填待验证项。`quote_extract` 7 条 + 槽位 1 条 + 知识 9 条，selftest 92→101 全绿。仓库将推送至 hilyfux/us-market-system（system-state.md 因含 webhook 密钥被 gitignore，另附 example 模板）。
 - 2026-07-27 · v2.4 — **模拟盘独立槽位 + 硬约束显式化**。用户明确硬约束：模拟盘初始资金 US$100,000、最多 8 持仓。`slot_report()` 改为 8 槽风险预算**只对模拟持仓计数**，真实持仓单列 `real_tracked`、不占模拟预算（解除"5 真实仓占满、8.5 万现金无槽可用"的结构性死锁）。`tools/selftest.py` 更新 test_slots 至新契约并加 1 例（真实仓数量已知也不占模拟槽），91→92 全绿。**未决（须用户显式授权的红线变更）**：用户提出"盘前设止盈止损、盘中做交易决策、收到信息即可下单"，与现行契约冲突（§3/§4/§10：模拟交易仅 MORNING/POST_CLOSE 可执行，盘前/盘中只分析、不落账）；且 §10 已实测盘中抓取行情不可靠。此项**未实施**，等待显式授权与（若开放盘中执行）可靠行情源 + 对应红线测试。

@@ -239,7 +239,7 @@ def test_outbox():
     print("\n== outbox 契约 ==")
     tmp = tempfile.mkdtemp(prefix="obtest-")
     try:
-        ob.assert_path_usable(tmp)
+        ob.assert_path_usable(tmp, create_anchor=True)
         hook = "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=x"
 
         # 以下机制用例（去重/抑制）用 toy 文案，关掉 lint 专测机制。
@@ -287,6 +287,7 @@ def test_outbox():
     # 回归本次事故：某些沙箱 FUSE 挂载允许 open/write/rename 却拒绝 unlink(EPERM)。
     # enqueue() 从不 unlink，故 unlink 被拒时 outbox 必须仍判为可用，绝不误报。
     tmp_u = tempfile.mkdtemp(prefix="ob-unlink-")
+    ob.assert_path_usable(tmp_u, create_anchor=True)
     orig_remove = os.remove
     try:
         def _deny_unlink(*a, **k):
@@ -309,6 +310,7 @@ def test_outbox():
 
     # 检出力保留 1：rename（原子入队）不可用必须致命。
     tmp_r = tempfile.mkdtemp(prefix="ob-rename-")
+    ob.assert_path_usable(tmp_r, create_anchor=True)
     orig_rename = os.rename
     try:
         def _deny_rename(*a, **k):
@@ -340,6 +342,7 @@ def test_outbox():
 
     # 探针终名必须是点文件且非 .json：否则会被 queue_state()/转发器误当成待投消息。
     tmp_p = tempfile.mkdtemp(prefix="ob-probe-")
+    ob.assert_path_usable(tmp_p, create_anchor=True)
     try:
         orig_rm = os.remove
         os.remove = lambda *a, **k: (_ for _ in ()).throw(PermissionError(1, "nope"))
@@ -439,6 +442,7 @@ def test_report_lint():
 
     # enqueue 硬门：不合格报告必须抛 ReportLintError，绝不静默入队
     tmp = tempfile.mkdtemp(prefix="lint-eq-")
+    ob.assert_path_usable(tmp, create_anchor=True)
     try:
         hook = "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=x"
         try:
@@ -525,13 +529,80 @@ def test_knowledge():
         shutil.rmtree(tmp, ignore_errors=True)
 
 
+def test_high_availability():
+    print("\n== 高可用（2026-07-27 体检修复）==")
+
+    # A. 锚定哨兵：堵「沙箱 home 假 outbox 静默吞消息」陷阱（实测确认过会发生）
+    tmp = tempfile.mkdtemp(prefix="anchor-")
+    try:
+        try:
+            ob.assert_path_usable(tmp)
+            check("既存目录但无锚定文件必须被拒（陷阱回归）", False, "未抛异常")
+        except ob.EnqueuePathUnavailable:
+            check("既存目录但无锚定文件必须被拒（陷阱回归）", True)
+        missing = os.path.join(tmp, "no-such-dir")
+        try:
+            ob.assert_path_usable(missing)
+            check("不存在的目录必须被拒（不再自动创建生产 outbox）", False, "未抛异常")
+        except ob.EnqueuePathUnavailable:
+            check("不存在的目录必须被拒（不再自动创建生产 outbox）", True)
+        check("目录未被静默创建", not os.path.isdir(missing))
+        p = ob.assert_path_usable(tmp, create_anchor=True)
+        check("create_anchor 显式初始化后通过", p == tmp
+              and open(os.path.join(tmp, ob.ANCHOR_NAME)).read() == ob.ANCHOR_CONTENT)
+        with open(os.path.join(tmp, ob.ANCHOR_NAME), "w") as f:
+            f.write("wrong content")
+        try:
+            ob.assert_path_usable(tmp)
+            check("锚定内容不符必须被拒", False, "未抛异常")
+        except ob.EnqueuePathUnavailable:
+            check("锚定内容不符必须被拒", True)
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+    # B. W5 git 管道看门狗（WARN 级，绝不阻断交易）
+    r = ig.git_pipeline_check(bundle_exists=False, bundle_age_min=None,
+                              stamp_matches=False, err_bytes=0)
+    check("无 bundle -> W5 通过", all(x.passed for x in r), str([repr(x) for x in r]))
+    r = ig.git_pipeline_check(True, 45.0, False, 0)
+    stale = [x for x in r if not x.passed]
+    check("bundle 待处理 45min 未盖章 -> GIT_PIPELINE_STALE",
+          len(stale) == 1 and stale[0].severity == "WARN", str([repr(x) for x in r]))
+    r = ig.git_pipeline_check(True, 45.0, True, 0)
+    check("已盖章的旧 bundle -> 通过（已处理）", all(x.passed for x in r))
+    r = ig.git_pipeline_check(False, None, False, 120)
+    err = [x for x in r if not x.passed]
+    check("pusher.err 非空 -> WARN 检出", len(err) == 1 and err[0].severity == "WARN")
+
+    # C. W2 存活：时区无冒号归一化 + 阈值语义（800min 覆盖最大排期空档）
+    import state as st
+    tmp2 = tempfile.mkdtemp(prefix="live-")
+    try:
+        for n in st.FILES:
+            with open(os.path.join(tmp2, n), "w") as f:
+                f.write("placeholder\n")
+        with open(os.path.join(tmp2, "system-state.md"), "w") as f:
+            f.write("## Run summary\n\nactual_start: 2026-07-27T08:02:37+0800\n")
+        s = st.last_run_started(tmp2)
+        check("`+0800` 归一化为可解析 ISO", s == "2026-07-27T08:02:37+08:00", repr(s))
+        parsed = datetime.fromisoformat(s)
+        now_ok = parsed + timedelta(minutes=100)
+        now_bad = parsed + timedelta(minutes=900)
+        check("100min 间隔 -> W2 通过", ig.liveness_check(s, now_ok, 800).passed)
+        check("900min 间隔 -> W2 检出停摆", not ig.liveness_check(s, now_bad, 800).passed)
+        check("无记录 -> W2 检出（无法证明存活）", not ig.liveness_check(None, now_ok, 800).passed)
+    finally:
+        shutil.rmtree(tmp2, ignore_errors=True)
+
+
 def main():
     print("=" * 70)
     print("us-market-system 自检 —— 可执行规范")
     print("=" * 70)
     for fn in (test_routing, test_schedule_alignment, test_regime, test_slots,
                test_accounting, test_staleness, test_provenance, test_outbox,
-               test_report_lint, test_quote_extract, test_knowledge):
+               test_report_lint, test_quote_extract, test_knowledge,
+               test_high_availability):
         fn()
     print("\n" + "=" * 70)
     print("合计：%d 通过，%d 失败" % (PASS, FAIL))

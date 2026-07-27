@@ -145,6 +145,33 @@ def liveness_check(last_run_iso: Optional[str], now: datetime, max_gap_min: int 
                        "距上次运行 %.1f 分钟" % gap)
 
 
+def git_pipeline_check(bundle_exists: bool, bundle_age_min: Optional[float],
+                       stamp_matches: bool, err_bytes: int,
+                       max_pending_min: int = 30) -> List[CheckResult]:
+    """
+    W5 git 推送管道看门狗（2026-07-27，WARN 级——git 故障绝不阻断交易/报告）。
+    检出：bundle 已出但转发器长时间未处理（GIT_PIPELINE_STALE）；pusher.err 有内容。
+    v1 pusher 的"错误基线比较->误盖章跳过"类 bug 即属此类：坏在沉默，不坏在报错。
+    """
+    res = []
+    if not bundle_exists:
+        res.append(CheckResult("W5 git 管道", True, None, None, "无待推 bundle", severity="WARN"))
+    elif stamp_matches:
+        res.append(CheckResult("W5 git 管道", True, None, None, "bundle 已被转发器处理", severity="WARN"))
+    else:
+        ok = bundle_age_min is not None and bundle_age_min <= max_pending_min
+        res.append(CheckResult("W5 git 管道", ok, max_pending_min,
+                               None if bundle_age_min is None else round(bundle_age_min, 1),
+                               "bundle 待处理 %s 分钟%s" % (
+                                   "?" if bundle_age_min is None else "%.1f" % bundle_age_min,
+                                   "" if ok else " -> GIT_PIPELINE_STALE（转发器可能未运行）"),
+                               severity="WARN"))
+    res.append(CheckResult("W5 pusher.err 为空", err_bytes == 0, 0, err_bytes,
+                           "" if err_bytes == 0 else "pusher 有 stderr 输出，需查看",
+                           severity="WARN"))
+    return res
+
+
 def queue_health(pending: Sequence[str], failed: Sequence[str], now: datetime,
                  oldest_pending_age_min: Optional[float], max_age_min: int = 30) -> List[CheckResult]:
     """死信与积压监控：failed/ 此前无人查看，.attempts 用尽后静默放弃。"""

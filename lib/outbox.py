@@ -46,13 +46,46 @@ def outbox_path() -> str:
     return os.environ.get("US_STOCK_OUTBOX", DEFAULT_OUTBOX)
 
 
-def assert_path_usable(path: Optional[str] = None) -> str:
+ANCHOR_NAME = ".anchor"
+ANCHOR_CONTENT = "us-stock-outbox v1"
+
+
+def assert_path_usable(path: Optional[str] = None, create_anchor: bool = False) -> str:
+    """
+    2026-07-27 新增**锚定哨兵**：真 outbox 必须含 `.anchor` 文件（内容固定）。
+
+    背景（实测确认的静默丢失陷阱）：沙箱内 `~` 解析为沙箱 home，而非宿主机 home。
+    若运行照抄 `US_STOCK_OUTBOX=~/.local/share/us-stock-outbox`，旧实现会在沙箱 home
+    **新建一个空 outbox 并通过检查**——消息入队到转发器永远不看的目录 = 静默丢失，
+    正是 §5 要杜绝的事故类别。故：目录不存在或缺锚定文件 → 一律 EnqueuePathUnavailable；
+    绝不静默创建生产 outbox。`create_anchor=True` 仅供测试/显式初始化使用。
+    """
     p = path or outbox_path()
     for pref in TCC_PROTECTED_PREFIXES:
         if os.path.abspath(p).startswith(pref):
             raise TccProtectedPath(
                 "outbox 位于 TCC 保护区 %s；launchd 后台转发器无法读取，"
                 "会造成消息只入队不投递。请使用 ~/.local/share/us-stock-outbox。" % pref)
+    anchor = os.path.join(p, ANCHOR_NAME)
+    if create_anchor:
+        os.makedirs(p, exist_ok=True)
+        if not os.path.exists(anchor):
+            with open(anchor, "w", encoding="utf-8") as f:
+                f.write(ANCHOR_CONTENT)
+    if not os.path.isdir(p):
+        raise EnqueuePathUnavailable(
+            "outbox %s 不存在。拒绝自动创建（防沙箱 home 假 outbox 静默吞消息）；"
+            "请确认挂载与路径，或显式初始化后重试。" % p)
+    try:
+        with open(anchor, encoding="utf-8") as f:
+            first = f.readline().strip()
+        if first != ANCHOR_CONTENT:
+            raise OSError("锚定文件内容不符：%r" % first)
+    except OSError as e:
+        raise EnqueuePathUnavailable(
+            "outbox %s 缺少有效锚定文件 %s（%s）。该目录可能是错误路径上被误建的空 outbox"
+            "（如沙箱 home），消息写入将被静默丢弃 -> 按 ENQUEUE_PATH_UNAVAILABLE 处理。"
+            % (p, ANCHOR_NAME, e))
     # 探针只验证 enqueue() 真正依赖的能力：建目录 + 原子写(tmp -> rename) + 读回。
     # 2026-07-27 修正：旧探针用 write-then-`os.remove`，把 unlink 当作可用性硬条件。
     # 但 enqueue() 从不 unlink——它只 write .tmp 再 os.rename 成 .json；消息的归档/删除
