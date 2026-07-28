@@ -1,6 +1,6 @@
 # 美股决策系统 · 总纲（SYSTEM.md）
 
-canonical_spec_version: 2.9
+canonical_spec_version: 2.10
 derived_from: strategy-playbook VERSION 2.0.0
 last_updated: 2026-07-27
 state_root: /Users/linqing.wang/Desktop/Claude/us-stock-system
@@ -237,7 +237,7 @@ CORE（引自 strategy-playbook VERSION 2.0.0）：
 **思想**：像 llm_wiki 那样**增量维护一个持久、互链的知识 wiki**（`knowledge/`），而不是每次运行从零推理。这是 §0"机制以代码为准"的知识层对应物：判断沉淀成页面，页面进入下次判断。
 
 - 结构：`knowledge/index.md`（总目录）｜`tickers/<SYM>.md`（每标的：论点/关键位/财报史/教训）｜`regime/<YYYY-MM>.md`（环境演变）｜`reviews/<YYYY-MM-DD>.md`（每日复盘）｜`lessons.md`（跨标的持久教训，L-xxx 编号，只增不删）。
-- 闭环（实现 `lib/knowledge.py`，有测试）：MORNING/POST_CLOSE **决策前读**相关标的页与 lessons，**决策后回写**"事实→动作→理由"；POST_CLOSE 每交易日写复盘并回填昨日"待验证"项。盘前/盘中只读。
+- 闭环（实现 `lib/knowledge.py`，有测试）：MORNING/POST_CLOSE **决策前读**相关标的页与 lessons，**决策后回写**"事实→动作→理由"；POST_CLOSE 每交易日写**策略复盘**（2026-07-28 裁定：复盘=投资决策审计——账目/跑偏与根因/选股审计/教训/关注，**系统事件不入复盘**，只进 run-summary）并回填昨日"待验证"项。盘前/盘中只读。
 - 纪律：增量追加不覆盖；幂等（相同记录不重复）；事实带 as-of 与来源；教训必须写成"下次遇到 X 就做 Y"才能进 lessons.md；缺页返回 None、不臆造。
 - 版本化：`knowledge/` 随仓库进 git（`hilyfux/us-market-system`），复盘历史即策略演化史。POST_CLOSE 状态写入后做**本地 commit**（沙箱无网不 push），并在盘后报告末尾提醒待推送提交数（`git rev-list --count @{u}..HEAD`，离线可算）；push 由用户在本机执行。
 
@@ -251,6 +251,7 @@ CORE（引自 strategy-playbook VERSION 2.0.0）：
 
 ## 8. 变更记录
 
+- 2026-07-28 · v2.10 — **7/27 结算回补 + 复盘重定义 + 供应商决策**。(1) 7/27 GAP 关闭：历史页次晨回补法，8/8 双源 ≤0.09% 一次成功，估值推进至 7/27（钱包 99,862.49，C1–C6 全零，W1=0）；「历史页次晨回补」定为标准方法，「收盘后即抓报价页」列为禁止方法（sources.md）。RMBS Q2 超预期盘后平稳，RED_PENDING 解除。(2) **复盘重定义（用户裁定）**：reviews/=纯策略复盘（账目/跑偏根因/选股审计/教训/关注），系统事件只进 run-summary；模板入 SKILL。首篇策略复盘落地（结论：入场跑偏、管理未跑偏；规则化入场的 ABT 为最佳仓；L-008/009/010 入册）。(3) 供应商：stooq 与 yahoo-chart-API 沙箱实测不可达（勿重试）；已建议用户连接 Alpha Vantage MCP，连接后按晋升规则实测入册。
 - 2026-07-28 · v2.9 — **§13 数据分层管理落地**（用户指示：信息源/持仓/盘后三域系统化）。`integrity.APPROVED_SOURCES` 按指标分级注册表（实测来源+怪癖标志）+ `approved_for()`；`data/sources.md`（与代码强制同步）；`tools/refresh_data.py` 生成 `data/positions.md` 归一化视图；`data/post-close.md` 结算登记簿（7/16、7/24 VERIFIED；**7/27 GAP 显式登记**：盘中降级致结算未完成，估值仍在 7/24，W1 明日到限，补救路径已写明）。selftest 117→132 全绿（P1 可满足性、黑名单无交集、怪癖标志一致、文档同步、视图纯函数）。
 - 2026-07-27 · v2.8 — **推送格式按用户要求重写：交易便签化**。用户反馈推送冗长、罗列来源与“未核实”等内部问题。裁定：推送只含「代码·动作·一句原因」（+标题/成交/🚨），通常 <300 字；溯源、as-of、数据质量、管道故障等一律内部处理（run-summary/knowledge/escalations），**不推给用户**。L5（强制来源标注）撤销，反转为 **L6 内部事务泄漏检查**（来源域名/降级术语/升级项进正文即违规）。溯源验证本身不变（ACT-001/P1–P5 照做）。selftest 114→117 全绿。
 - 2026-07-27 · v2.7 — **高可用体检：修 1 个致命陷阱 + 4 处文档-代码矛盾**。(1) **锚定哨兵**：实测确认沙箱 `~` 差异会让旧 `assert_path_usable` 在错误 home **新建空 outbox 并通过**（消息静默丢失，正是 §5 要杜绝的事故类别）——现要求 `.anchor` 哨兵、拒绝无锚目录、绝不自动创建；SKILL preflight 片段改为按锚定自动发现挂载路径。(2) **W2 存活接入 preflight**（此前 lib 有定义但从未被调用，与 §11“preflight 统一输出”矛盾；WARN 级阈值 800min 覆盖最大排期空档，不阻断）。(3) **新增 W5 git 管道看门狗**（WARN：bundle 滞留/pusher.err 非空；v1 pusher 的静默跳过类 bug 属此检出域）。(4) **每日存活心跳落地**（§11 原文“见下”悬空：ET 非交易日 SGT≥09:00 入队 `HEARTBEAT+日期`，堵住周日 MORNING 去重导致的静默日）。(5) SKILL 盘中节奏补写 §10 三锚点（原文欠缺）。`state.last_run_started()` 归一化 `+0800` 时区。selftest 101→114 全绿。

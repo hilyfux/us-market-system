@@ -4,7 +4,8 @@ schema_version: 2.0
 base_currency: USD
 slot_limit: 8
 last_reconciled_at: 2026-07-25T13:05:00+08:00
-price_as_of: 2026-07-24 regular close (VERIFIED, >=2 independent sources per symbol, 0.00% discrepancy)
+price_as_of: 2026-07-27 regular close (VERIFIED, 2 independent sources per symbol, <=0.09% discrepancy; backfilled 2026-07-28 via history-page method)
+prior_price_as_of: 2026-07-24 regular close (superseded)
 prior_price_as_of: 2026-07-16 regular close (superseded; 6-trading-day gap closed on 2026-07-25)
 
 ## Invariants
@@ -19,19 +20,19 @@ prior_price_as_of: 2026-07-16 regular close (superseded; 6-trading-day gap close
 
 | symbol | status | opened_on | cost | quantity | last_close | close_date | data_status | thesis |
 |---|---|---:|---:|---:|---:|---:|---|---|
-| PWR | OPEN | 2026-07-08 | 666.33 | 15.0076 | 625.84 | 2026-07-24 | VERIFIED | Grid and data-center electrical infrastructure demand; record backlog intact; Q2 due Jul 30 pre-open. JPMorgan cut to Neutral (PT 714) in gap window; −4.28% on 7/24 with no company-specific catalyst |
-| MP | OPEN | 2026-07-08 | 53.00 | 188.6792 | 41.30 | 2026-07-24 | VERIFIED | US strategic rare-earth supply chain. 🚨 New 52-week low (41.12 intraday); −7.50% on 7/24; rare-earth oversupply/NdPr price fears; no verified company impairment; Q2 moved to Aug 6 |
-| BE | OPEN | 2026-07-10 | 244.61 | 40.8814 | 184.89 | 2026-07-24 | VERIFIED | Distributed power for AI infrastructure. 🚨 −14.91% on 7/24 (gapped down, never traded above open); Panama/EdgeMode deal buzz failed to hold; two securities-fraud investigation notices filed 7/17; Q2 due Jul 28 after close |
-| KTOS | OPEN | 2026-07-10 | 48.19 | 207.5119 | 47.35 | 2026-07-24 | VERIFIED | Defense, space and unmanned-systems order growth; ~$156M sole-source counter-UAS IDIQ award 7/21; Elroy Air manufacturing deal 7/20; Q2 confirmed Aug 4 after close |
-| RMBS | OPEN | UNKNOWN | 115.00 | 86.9565 | 96.01 | 2026-07-24 | VERIFIED | DDR5 memory-interface demand; quantity 86.9565 derived from user-confirmed $10,000 sizing ÷ recorded entry 115.00 (2026-07-27); −6.96% on 7/24 with no company catalyst (semis/AI-memory pullback); Q2 due Jul 27 after close |
+| PWR | OPEN | 2026-07-08 | 666.33 | 15.0076 | 620.28 | 2026-07-27 | VERIFIED | Grid and data-center electrical infrastructure demand; record backlog intact; Q2 due Jul 30 pre-open. JPMorgan cut to Neutral (PT 714) in gap window; −4.28% on 7/24 with no company-specific catalyst |
+| MP | OPEN | 2026-07-08 | 53.00 | 188.6792 | 43.13 | 2026-07-27 | VERIFIED | US strategic rare-earth supply chain. 🚨 New 52-week low (41.12 intraday); −7.50% on 7/24; rare-earth oversupply/NdPr price fears; no verified company impairment; Q2 moved to Aug 6 |
+| BE | OPEN | 2026-07-10 | 244.61 | 40.8814 | 188.18 | 2026-07-27 | VERIFIED | Distributed power for AI infrastructure. 🚨 −14.91% on 7/24 (gapped down, never traded above open); Panama/EdgeMode deal buzz failed to hold; two securities-fraud investigation notices filed 7/17; Q2 due Jul 28 after close |
+| KTOS | OPEN | 2026-07-10 | 48.19 | 207.5119 | 49.45 | 2026-07-27 | VERIFIED | Defense, space and unmanned-systems order growth; ~$156M sole-source counter-UAS IDIQ award 7/21; Elroy Air manufacturing deal 7/20; Q2 confirmed Aug 4 after close |
+| RMBS | OPEN | UNKNOWN | 115.00 | 86.9565 | 96.42 | 2026-07-27 | VERIFIED | DDR5 memory-interface demand; quantity 86.9565 derived from user-confirmed $10,000 sizing ÷ recorded entry 115.00 (2026-07-27); −6.96% on 7/24 with no company catalyst (semis/AI-memory pullback); Q2 due Jul 27 after close |
 
 ## OPEN simulated positions
 
 | symbol | status | opened_on | cost | quantity | cost_basis | last_close | close_date | market_value | unrealized_pnl | data_status | thesis |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---:|---|---|
-| GEV | OPEN | BASELINE_MIGRATED | 1042.60 | 4.7957 | 4999.996820 | 1014.75 | 2026-07-24 | 4866.436575 | -133.560245 | VERIFIED | Grid/power-gen capex. **Q2 REPORTED 7/22 pre-open**: EPS $2.47 adj vs $3.17 cons (MISS), revenue $11.1B vs $10.8B (BEAT), orders $24.2B +88% YoY, backlog $176B, "mostly sold out through 2030", FY26 revenue guidance RAISED to $45.5–46.5B (2nd consecutive raise). Drag: wind orders −40%, offshore cost, tariff risk. Reaction 7/22 −8.69% → 7/23 +4.69% → 7/24 −1.59%. Closed below 50d MA 1033.10 |
-| ETN | OPEN | BASELINE_MIGRATED | 415.52 | 12.0331 | 4999.993712 | 404.07 | 2026-07-24 | 4862.214717 | -137.778995 | VERIFIED | Electrification and data-center power management; thesis intact, no verified impairment. Best relative performer among laggards (+3.55pp vs SPY in gap). Dividend $1.10 declared 7/21. Q2 due Jul 31 pre-open |
-| ABT | OPEN | 2026-07-17 | 98.83 | 50.5919 | 4999.997477 | 103.06 | 2026-07-24 | 5214.001214 | 214.003737 | VERIFIED | **Thesis CONFIRMED and strengthened.** Q2 (7/16) EPS $1.31 vs $1.28 beat, revenue $12.59B vs $12.52B, FY26 adj EPS raised to $5.45–5.60. Since entry: broad PT raises (JPM 120, BofA 115, Citi 112, Daiwa 92→103), no downgrades; 7/24 +2.29% on TWO legal wins (shareholder formula suit dismissed; 7th Circuit appeal won). New risks: 7/17 cybersecurity incidents (cancer diagnostics + LabCentral) with patient class actions; 7/24 FreeStyle Libre 3 class action. Stop-loss trigger (official close < 95.86) NOT hit; +4.28% vs cost |
+| GEV | OPEN | BASELINE_MIGRATED | 1042.60 | 4.7957 | 4999.996820 | 996.57 | 2026-07-27 | 4779.250749 | -220.746071 | VERIFIED | Grid/power-gen capex. **Q2 REPORTED 7/22 pre-open**: EPS $2.47 adj vs $3.17 cons (MISS), revenue $11.1B vs $10.8B (BEAT), orders $24.2B +88% YoY, backlog $176B, "mostly sold out through 2030", FY26 revenue guidance RAISED to $45.5–46.5B (2nd consecutive raise). Drag: wind orders −40%, offshore cost, tariff risk. Reaction 7/22 −8.69% → 7/23 +4.69% → 7/24 −1.59%. Closed below 50d MA 1033.10 |
+| ETN | OPEN | BASELINE_MIGRATED | 415.52 | 12.0331 | 4999.993712 | 398.64 | 2026-07-27 | 4796.874984 | -203.118728 | VERIFIED | Electrification and data-center power management; thesis intact, no verified impairment. Best relative performer among laggards (+3.55pp vs SPY in gap). Dividend $1.10 declared 7/21. Q2 due Jul 31 pre-open |
+| ABT | OPEN | 2026-07-17 | 98.83 | 50.5919 | 4999.997477 | 104.49 | 2026-07-27 | 5286.347631 | 286.350154 | VERIFIED | **Thesis CONFIRMED and strengthened.** Q2 (7/16) EPS $1.31 vs $1.28 beat, revenue $12.59B vs $12.52B, FY26 adj EPS raised to $5.45–5.60. Since entry: broad PT raises (JPM 120, BofA 115, Citi 112, Daiwa 92→103), no downgrades; 7/24 +2.29% on TWO legal wins (shareholder formula suit dismissed; 7th Circuit appeal won). New risks: 7/17 cybersecurity incidents (cancer diagnostics + LabCentral) with patient class actions; 7/24 FreeStyle Libre 3 class action. Stop-loss trigger (official close < 95.86) NOT hit; +4.28% vs cost |
 
 ## Position sizing note — 2026-07-27 (user-confirmed $10,000 per real position)
 
