@@ -187,6 +187,42 @@ def queue_health(pending: Sequence[str], failed: Sequence[str], now: datetime,
 
 
 # --------------------------------------------------------------- 行情溯源
+# 信息源注册表（2026-07-27 §13）：**按指标分级**，全部条目来自实测（2026-07-25 三源核验记录）。
+# 规则：交易门槛指标（equity_close/vix/us10y）每项须 ≥2 个核准源，否则 P1 永远无法通过——
+# 这是可用性属性，selftest 断言之。quirk 标志与 CACHE_BUSTER/STAMP 常量保持一致。
+APPROVED_SOURCES = {
+    "equity_close": {           # 个股/ETF 正式收盘与历史
+        "stockanalysis.com": {"cache_buster": True,
+                              "note": "无 ?v= 缓存参数会返回数周旧缓存（ETN 实测给过 7/21 收盘）"},
+        "roic.ai": {"note": "ABT 实测含盘后价，取正式收盘字段"},
+        "stocktitan.net": {"stamp_check": True,
+                           "note": "按标的冻结；必须核对 Last updated（GEV 页曾滞留一个月）"},
+        "stockscan.io": {},
+    },
+    "vix": {                    # 波动率指数
+        "cboe.com": {"cache_buster": True, "note": "发行方；cdn.cboe.com 无缓存参数曾给六月快照"},
+        "investing.com": {"note": "仅指数页可用；其个股报价页数周陈旧，不得用于 equity_close"},
+        "google.com/finance": {},
+        "tradingeconomics.com": {},
+    },
+    "us10y": {                  # 十年期美债收益率
+        "investing.com": {},
+        "cboe.com": {"note": "^TNX"},
+        "tradingeconomics.com": {},
+        "etftrends.com": {},
+    },
+    "breadth": {                # 市场宽度（环境分类用，非交易门槛，允许单源+标注）
+        "stockanalysis.com": {"cache_buster": True, "note": "markets 页；单源可用但须在内部记录标注"},
+    },
+}
+TRADE_GATING_METRICS = ("equity_close", "vix", "us10y")
+
+
+def approved_for(metric: str):
+    """返回该指标的核准源字典；未注册指标返回空 dict（调用方须显式处理）。"""
+    return APPROVED_SOURCES.get(metric, {})
+
+
 BAD_SOURCES = {
     "nasdaq.com": "JS 空壳", "cnbc.com": "JS 空壳", "finviz.com": "JS 空壳",
     "zacks.com": "JS 空壳", "barchart.com": "JS 空壳",

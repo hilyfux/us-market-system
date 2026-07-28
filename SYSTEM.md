@@ -1,6 +1,6 @@
 # 美股决策系统 · 总纲（SYSTEM.md）
 
-canonical_spec_version: 2.8
+canonical_spec_version: 2.9
 derived_from: strategy-playbook VERSION 2.0.0
 last_updated: 2026-07-27
 state_root: /Users/linqing.wang/Desktop/Claude/us-stock-system
@@ -26,7 +26,7 @@ state_root: /Users/linqing.wang/Desktop/Claude/us-stock-system
 
 **每次运行的第一步必须是 `python3 tools/preflight.py`。** 退出码非 0 即不得进入任何
 阶段流程（不得交易、不得发正常报告、不得在别处初始化）。
-规范改动必须先在 `tools/selftest.py` 补用例并全绿（当前 117/117）；
+规范改动必须先在 `tools/selftest.py` 补用例并全绿（当前 132/132）；
 改阈值就是改策略，测试用例即策略的可执行定义。
 
 > 这是整套美股决策系统的**唯一共享规则源**。所有任务的 SKILL 只写"本任务独有的部分"，共享铁律一律以本文件为准。修改共享规则只改这里，不要在各 SKILL 里各写一份。
@@ -56,6 +56,9 @@ state_root: /Users/linqing.wang/Desktop/Claude/us-stock-system
 | `strategy-playbook.md` | 策略手册：CORE / ACTIVE / HYPOTHESIS / REJECTED / VERSION | 盘后（策略学习） |
 | `alert-state.md` | 推送去重键（alert_key / report_key） | 所有任务（errcode=0 后） |
 | `system-state.md` | 配置（state_root、企业微信 webhook）+ 各次运行日志 | 所有任务 |
+| `data/sources.md` | 信息源注册表（人读；机器真源在 `integrity.APPROVED_SOURCES`，selftest 强制同步） | 维护（先码后文） |
+| `data/positions.md` | 持仓归一化视图（**GENERATED**，真源仍是账本） | `tools/refresh_data.py`（晨间/盘后状态写入后） |
+| `data/post-close.md` | 盘后结算登记簿：每交易日 VERIFIED/GAP/PARTIAL；钱包估值日只准指向 VERIFIED 行 | 盘后（或次日晨间补记） |
 
 ## 3. 任务地图（单一定时任务）
 
@@ -238,8 +241,17 @@ CORE（引自 strategy-playbook VERSION 2.0.0）：
 - 纪律：增量追加不覆盖；幂等（相同记录不重复）；事实带 as-of 与来源；教训必须写成"下次遇到 X 就做 Y"才能进 lessons.md；缺页返回 None、不臆造。
 - 版本化：`knowledge/` 随仓库进 git（`hilyfux/us-market-system`），复盘历史即策略演化史。POST_CLOSE 状态写入后做**本地 commit**（沙箱无网不 push），并在盘后报告末尾提醒待推送提交数（`git rev-list --count @{u}..HEAD`，离线可算）；push 由用户在本机执行。
 
+## 13. 数据分层管理（2026-07-28 新增）
+
+三个数据域，各有唯一真源、唯一写入方、显式状态：
+
+1. **信息源**：机器真源 `integrity.APPROVED_SOURCES`（按指标分级：equity_close/vix/us10y/breadth，含 cache-buster/stamp-check 怪癖标志，全部来自实测）+ `BAD_SOURCES` 黑名单；人读文档 `data/sources.md`，selftest 断言两者同步、且每个交易门槛指标 ≥2 核准源（否则 P1 永不可满足——这是可用性属性）。新源晋升/降级规则见 sources.md。
+2. **持仓数据**：真源不变（`portfolio-ledger.md`）；新增 `data/positions.md` 归一化视图（真实+模拟同列口径，真实仓也有市值/盈亏，PROXY/RECORDED 成本标注），由 `tools/refresh_data.py` 生成、禁止手编。历史叙事（晨间逻辑卡、重估记录）今后沉淀到 knowledge/，账本保持表格+不变量。
+3. **盘后数据**：`data/post-close.md` 登记簿——每交易日一节（基准+环境分类+八仓收盘+核验方式），状态 VERIFIED/GAP/PARTIAL；**钱包 `valuation_date` 只允许指向 VERIFIED 行**；序列缺口显式登记（含 2026-07-17~23 停摆、2026-07-27 结算未完成），不假装完整。
+
 ## 8. 变更记录
 
+- 2026-07-28 · v2.9 — **§13 数据分层管理落地**（用户指示：信息源/持仓/盘后三域系统化）。`integrity.APPROVED_SOURCES` 按指标分级注册表（实测来源+怪癖标志）+ `approved_for()`；`data/sources.md`（与代码强制同步）；`tools/refresh_data.py` 生成 `data/positions.md` 归一化视图；`data/post-close.md` 结算登记簿（7/16、7/24 VERIFIED；**7/27 GAP 显式登记**：盘中降级致结算未完成，估值仍在 7/24，W1 明日到限，补救路径已写明）。selftest 117→132 全绿（P1 可满足性、黑名单无交集、怪癖标志一致、文档同步、视图纯函数）。
 - 2026-07-27 · v2.8 — **推送格式按用户要求重写：交易便签化**。用户反馈推送冗长、罗列来源与“未核实”等内部问题。裁定：推送只含「代码·动作·一句原因」（+标题/成交/🚨），通常 <300 字；溯源、as-of、数据质量、管道故障等一律内部处理（run-summary/knowledge/escalations），**不推给用户**。L5（强制来源标注）撤销，反转为 **L6 内部事务泄漏检查**（来源域名/降级术语/升级项进正文即违规）。溯源验证本身不变（ACT-001/P1–P5 照做）。selftest 114→117 全绿。
 - 2026-07-27 · v2.7 — **高可用体检：修 1 个致命陷阱 + 4 处文档-代码矛盾**。(1) **锚定哨兵**：实测确认沙箱 `~` 差异会让旧 `assert_path_usable` 在错误 home **新建空 outbox 并通过**（消息静默丢失，正是 §5 要杜绝的事故类别）——现要求 `.anchor` 哨兵、拒绝无锚目录、绝不自动创建；SKILL preflight 片段改为按锚定自动发现挂载路径。(2) **W2 存活接入 preflight**（此前 lib 有定义但从未被调用，与 §11“preflight 统一输出”矛盾；WARN 级阈值 800min 覆盖最大排期空档，不阻断）。(3) **新增 W5 git 管道看门狗**（WARN：bundle 滞留/pusher.err 非空；v1 pusher 的静默跳过类 bug 属此检出域）。(4) **每日存活心跳落地**（§11 原文“见下”悬空：ET 非交易日 SGT≥09:00 入队 `HEARTBEAT+日期`，堵住周日 MORNING 去重导致的静默日）。(5) SKILL 盘中节奏补写 §10 三锚点（原文欠缺）。`state.last_run_started()` 归一化 `+0800` 时区。selftest 101→114 全绿。
 - 2026-07-27 · v2.6 — **git 推送自动化**（复用 §9 outbox 模式；沙箱无网 + ~/Desktop 受 TCC 保护，与企业微信推送同构）。POST_CLOSE 本地提交后出包 `git bundle` 至 `~/.local/share/us-stock-git/outgoing.bundle`（tmp+rename 原子写）；本机 launchd `com.linqingwang.us-stock-gitpush`（每 5 分钟，脚本 `~/.local/bin/us-stock-git-pusher.sh`）verify → **密钥守卫**（待推提交含 ≥20 位真实 webhook key 即拒推、响亮记日志；占位符/测试 key 放行，守卫已双向测试）→ fast-forward push。成功安静；失败留 📦 手动提醒兜底且不阻断报告。端到端已在沙箱验证（bundle 78KB、fetch 头一致 b3afb2a、历史无真实 key）。卸载=删脚本+plist+目录。

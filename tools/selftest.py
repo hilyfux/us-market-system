@@ -11,7 +11,9 @@ import tempfile
 from datetime import datetime, date, timedelta
 from decimal import Decimal
 
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "lib"))
+HERE_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.join(HERE_DIR, "..", "lib"))
+sys.path.insert(0, HERE_DIR)  # for importing sibling tools (refresh_data)
 
 import market_core as mc          # noqa: E402
 import integrity as ig            # noqa: E402
@@ -602,6 +604,53 @@ def test_high_availability():
         shutil.rmtree(tmp2, ignore_errors=True)
 
 
+def test_data_layer():
+    print("\n== 数据分层管理（§13，2026-07-27 新增）==")
+
+    # 1) 信息源注册表：可用性属性——交易门槛指标必须 ≥2 核准源，否则 P1 永不可能通过
+    for m in ig.TRADE_GATING_METRICS:
+        n = len(ig.approved_for(m))
+        check("交易门槛指标 %s 有 ≥2 核准源（P1 可满足性）" % m, n >= 2, "只有 %d 个" % n)
+    # 2) 核准与黑名单不得重叠
+    for m, srcs in ig.APPROVED_SOURCES.items():
+        overlap = set(srcs) & set(ig.BAD_SOURCES)
+        check("指标 %s 核准源与黑名单无交集" % m, not overlap, str(overlap))
+    # 3) quirk 标志与既有常量一致（cache-buster / stamp-check）
+    eq = ig.APPROVED_SOURCES["equity_close"]
+    check("stockanalysis 标记 cache_buster（与 CACHE_BUSTER_REQUIRED 一致）",
+          eq["stockanalysis.com"].get("cache_buster") is True
+          and "stockanalysis.com" in ig.CACHE_BUSTER_REQUIRED)
+    check("stocktitan 标记 stamp_check（与 STAMP_CHECK_REQUIRED 一致）",
+          eq["stocktitan.net"].get("stamp_check") is True
+          and "stocktitan.net" in ig.STAMP_CHECK_REQUIRED)
+    # 4) 文档同步：sources.md 必须包含每个核准域名与每个黑名单域名
+    doc_p = os.path.join(os.path.dirname(HERE_DIR), "data", "sources.md")
+    if os.path.exists(doc_p):
+        doc = open(doc_p, encoding="utf-8").read()
+        missing = [d for srcs in ig.APPROVED_SOURCES.values() for d in srcs if d not in doc]
+        missing += [d for d in ig.BAD_SOURCES if d not in doc]
+        check("data/sources.md 与代码注册表同步（域名全覆盖）", not missing, str(missing))
+    else:
+        check("data/sources.md 存在", False, doc_p)
+
+    # 5) 持仓归一化视图：纯函数正确性（含真实仓市值/盈亏计算）
+    import refresh_data as rd
+    fixture = [
+        {"symbol": "RMBS", "kind": "real", "status": "OPEN", "quantity": "86.9565",
+         "last_close": "96.01", "close_date": "2026-07-24"},
+        {"symbol": "ABT", "kind": "sim", "status": "OPEN", "quantity": "50.5919",
+         "cost_basis": "4999.997477", "last_close": "103.06", "close_date": "2026-07-24",
+         "market_value": "5214.001214", "unrealized_pnl": "214.003737"},
+    ]
+    md, tot = rd.build_positions_table(fixture, {})
+    check("视图含统一表头与全部行",
+          md.count("\n|---") == 1 and "RMBS" in md and "ABT" in md, md[:120])
+    check("真实仓市值按 qty×close 计算（8348.69）", str(tot["real_mv"]) == "8348.69", str(tot))
+    check("真实仓盈亏 = mv − 10000（−1651.31）", str(tot["real_upnl"]) == "-1651.31", str(tot))
+    check("模拟仓沿用账载市值（5214.00）", str(tot["sim_mv"]) == "5214.00", str(tot))
+    check("RECORDED/PROXY 标注存在", "RECORDED" in md)
+
+
 def main():
     print("=" * 70)
     print("us-market-system 自检 —— 可执行规范")
@@ -609,7 +658,7 @@ def main():
     for fn in (test_routing, test_schedule_alignment, test_regime, test_slots,
                test_accounting, test_staleness, test_provenance, test_outbox,
                test_report_lint, test_quote_extract, test_knowledge,
-               test_high_availability):
+               test_high_availability, test_data_layer):
         fn()
     print("\n" + "=" * 70)
     print("合计：%d 通过，%d 失败" % (PASS, FAIL))
