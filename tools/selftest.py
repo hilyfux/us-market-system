@@ -384,54 +384,61 @@ def test_report_lint():
     # 一份合规的盘中报告（标题+日期、动作合规、建议未执行、数据时间来源、篇幅内）
     good = (
         "# 美股盘中报告｜2026-07-27\n"
-        "市场：SPY 738.93；VIX 18.58（数据时间 10:00 ET，来源 stockanalysis.com）\n"
-        "ABT 持有 · 官方前收 103.06，未触发止盈条件\n"
-        "MP 减仓建议未执行 · 相对 SPY 走弱，需收盘确认\n"
+        "ABT · 持有 · 未触发止盈条件\n"
+        "MP · 减仓建议未执行 · 相对大盘走弱，需收盘确认\n"
     )
     check("合规盘中报告应通过", rl.lint_report(good, "INTRADAY")["ok"],
           str(rl.lint_report(good, "INTRADAY")["violations"]))
 
     # L1：标题缺失
-    bad_title = rl.lint_report("市场平稳，数据时间 10:00 来源 x\nABT 持有", "INTRADAY")
+    bad_title = rl.lint_report("市场平稳\nABT 持有", "INTRADAY")
     check("无标题行必须判违规（L1）", not bad_title["ok"])
 
     # L1：标题缺日期
-    bad_date = rl.lint_report("# 美股盘中报告\nABT 持有（数据时间 10:00 来源 x）", "INTRADAY")
+    bad_date = rl.lint_report("# 美股盘中报告\nABT 持有", "INTRADAY")
     check("标题缺日期必须判违规（L1）", not bad_date["ok"])
 
     # L3：模糊动词
-    vague = rl.lint_report("# 盘中｜2026-07-27\nMP 观察，数据时间 10:00 来源 x", "INTRADAY")
+    vague = rl.lint_report("# 盘中｜2026-07-27\nMP 观察", "INTRADAY")
     check("模糊动词「观察」必须判违规（L3）", not vague["ok"])
 
     # L4：盘中交易动作未标注“建议未执行”
-    unlabeled = rl.lint_report("# 盘中｜2026-07-27\nMP 减仓 20%，数据时间 10:00 来源 x", "INTRADAY")
+    unlabeled = rl.lint_report("# 盘中｜2026-07-27\nMP 减仓 20%", "INTRADAY")
     check("盘中减仓未标注「建议未执行」必须判违规（L4）", not unlabeled["ok"])
 
     # L4：否定语境不误判（“无减仓/平仓信号”）
     negated = rl.lint_report(
-        "# 盘中｜2026-07-27\n全部持有，无减仓/平仓信号（数据时间 10:00 来源 x）", "INTRADAY")
+        "# 盘中｜2026-07-27\n全部持有，无减仓/平仓信号", "INTRADAY")
     check("「无减仓/平仓信号」不得误判（L4 否定守卫）", negated["ok"],
           str(negated["violations"]))
 
     # L4（2026-07-27 修复）：条件/检查语境里的前瞻动作词不得误判。
     conditional = rl.lint_report(
-        "# 美股盘前｜2026-07-27\nMP 持有（建议未执行）数据时间 08:30 来源 x\n"
+        "# 美股盘前｜2026-07-27\nMP · 持有（建议未执行）· 财报前不动\n"
         "开盘后检查：若 BE 盘后财报破坏基本面，待正式收盘技术确认后再议减仓", "PREMARKET")
     check("条件/检查语境「若…待确认…再议减仓」不得误判（L4 条件守卫）",
           conditional["ok"], str(conditional["violations"]))
 
     # L4 检出力保留：真实的、当下的未标注交易动作行仍须判违规。
     real_unlabeled = rl.lint_report(
-        "# 美股盘前｜2026-07-27\nMP 减仓20% 数据时间 08:30 来源 x", "PREMARKET")
+        "# 美股盘前｜2026-07-27\nMP 减仓20%", "PREMARKET")
     check("当下未标注「建议未执行」的真实交易动作仍须判违规（L4 保留检出力）",
           not real_unlabeled["ok"], str(real_unlabeled["violations"]))
 
-    # L5：缺数据时间来源
-    nosrc = rl.lint_report("# 盘中｜2026-07-27\nABT 持有", "INTRADAY")
-    check("缺数据时间来源必须判违规（L5）", not nosrc["ok"])
+    # L5 已撤销（2026-07-27 用户裁定）：无来源标注也合格
+    nosrc = rl.lint_report("# 盘中｜2026-07-27\nABT · 持有 · 未触发止盈", "INTRADAY")
+    check("无来源/as-of 标注也合格（L5 撤销）", nosrc["ok"], str(nosrc["violations"]))
+
+    # L6：内部事务不得泄漏进推送
+    leak1 = rl.lint_report("# 盘中｜2026-07-27\nABT 持有（来源 stockanalysis.com）", "INTRADAY")
+    check("来源域名进正文必须判违规（L6）", not leak1["ok"])
+    leak2 = rl.lint_report("# 盘中｜2026-07-27\nMP 持有，数据降级", "INTRADAY")
+    check("「数据降级」进正文必须判违规（L6）", not leak2["ok"])
+    leak3 = rl.lint_report("# 盘中｜2026-07-27\n持有；MARKET_DATA_DEGRADED", "INTRADAY")
+    check("升级项代码进正文必须判违规（L6）", not leak3["ok"])
 
     # L2：篇幅超限（晨间 700 上限）
-    toolong = rl.lint_report("# 晨报｜2026-07-27\n来源 x 10:00\n" + "字" * 720, "MORNING")
+    toolong = rl.lint_report("# 晨报｜2026-07-27\n" + "字" * 720, "MORNING")
     check("晨间超 700 字必须判违规（L2）", not toolong["ok"])
 
     # stage 解析
@@ -452,7 +459,7 @@ def test_report_lint():
             check("不合格阶段报告必须被 enqueue 拒绝（抛 ReportLintError）", True)
         # 合规报告应能正常入队
         rgood = ob.enqueue("PREMARKET+2026-07-27",
-                           "# 美股盘前｜2026-07-27\n全部持有（数据时间 08:30 ET 来源 x）",
+                           "# 美股盘前｜2026-07-27\n全部持有（建议未执行）",
                            hook, path=tmp)
         check("合规阶段报告应正常入队", rgood["enqueued"], str(rgood))
     finally:

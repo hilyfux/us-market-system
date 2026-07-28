@@ -13,7 +13,9 @@ report_lint — 把 SYSTEM.md §5「可读性与无歧义」标准里**机器可
   L3 动作词表       正文出现的“类动作”动词必须取自 §4 词表；模糊动词（观察/关注/择机…）一律判违规。
   L4 建议未执行标注  盘前/盘中阶段的非“持有”交易动作行必须显式标注“建议未执行”
                      （带否定词的“无减仓/平仓信号”一类不误判）。
-  L5 数据时间来源    正文必须含数据时间/来源标记（SKILL 各阶段均要求“数据时间来源”）。
+  L5 （已撤销，2026-07-27）原“须注明数据时间来源”。用户裁定推送是交易便签，
+                     溯源与数据质量属内部事务；验证照做，但不进正文。
+  L6 内部事务泄漏    来源域名/降级术语/升级项出现在推送正文即违规（问题内部修，不推给用户）。
 
 纯语义类要求（自相矛盾、可两解、省略前提）无法在不做真正语言理解的前提下稳定判定，
 **刻意不在此断言**，仍由报告生成步骤负责——§5 已注明这一分工。
@@ -45,9 +47,12 @@ _NEGATION = ("无", "未", "没有", "不", "非", "no ", "not ", "without", "no
 _CONDITIONAL = ("若", "如果", "一旦", "假设", "检查", "复核",
                 "确认后", "待确认", "触发条件", "if ", "once ", "should ")
 _DATE_RE = re.compile(r"\d{4}-\d{2}-\d{2}|\d{1,2}\s*月\s*\d{1,2}\s*日")
-# 数据时间/来源标记（任一命中即视为已注明溯源）。
-_SOURCE_MARKERS = ("数据时间", "数据来源", "来源", "as-of", "as of", "截至",
-                   "时间戳", "报价时间", "收盘时间", "verified", "sources")
+# 内部事务标记（2026-07-27，L6）：这些词属于系统内部（溯源/降级/升级项），
+# 出现在推送正文即违规——用户只要「代码·动作·原因」，问题内部解决。
+_INTERNAL_LEAK_MARKERS = ("stockanalysis.com", "roic.ai", "数据时间", "数据来源",
+                          "MARKET_DATA_DEGRADED", "STATE_INTEGRITY_FAILURE",
+                          "ENQUEUE_PATH_UNAVAILABLE", "STALE_VALUATION",
+                          "数据降级", "未核实", "无法核实", "延迟>")
 
 
 class ReportLintError(ValueError):
@@ -111,11 +116,14 @@ def lint_report(markdown: str, stage: str) -> Dict[str, object]:
                 v.append("L4 %s 阶段的交易动作行必须标注「建议未执行」：%r"
                          % (stage, ln.strip()[:50]))
 
-    # L5 数据时间来源
-    low_all = markdown.lower()
-    has_source = any(m.lower() in low_all for m in _SOURCE_MARKERS)
-    has_time = bool(_DATE_RE.search(markdown)) or bool(re.search(r"\d{1,2}:\d{2}", markdown))
-    if not (has_source and has_time):
-        v.append("L5 缺数据时间/来源标注（须含来源标记且含日期或时刻）")
+    # L5（2026-07-27 撤销）：原要求正文含数据时间/来源标注。用户裁定：推送是给人看的
+    # 交易便签（代码·动作·原因），溯源、as-of、数据质量问题属于**系统内部事务**，
+    # 记入 run-summary / knowledge / escalations 并修复，不得推给用户。
+    # 溯源验证本身照做（ACT-001/P1-P5 不变），只是不再出现在推送正文里。
+
+    # L6 内部事务泄漏：来源域名/降级术语/系统升级项不得出现在推送正文。
+    for leak in _INTERNAL_LEAK_MARKERS:
+        if leak.lower() in markdown.lower():
+            v.append("L6 推送正文含内部事务「%s」——问题应内部记录并修复，不是推给用户" % leak)
 
     return {"ok": not v, "violations": v}
