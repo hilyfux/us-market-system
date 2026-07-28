@@ -6,7 +6,6 @@ slot_limit: 8
 last_reconciled_at: 2026-07-25T13:05:00+08:00
 price_as_of: 2026-07-27 regular close (VERIFIED, 2 independent sources per symbol, <=0.09% discrepancy; backfilled 2026-07-28 via history-page method)
 prior_price_as_of: 2026-07-24 regular close (superseded)
-prior_price_as_of: 2026-07-16 regular close (superseded; 6-trading-day gap closed on 2026-07-25)
 
 ## Invariants
 
@@ -24,7 +23,7 @@ prior_price_as_of: 2026-07-16 regular close (superseded; 6-trading-day gap close
 | MP | OPEN | 2026-07-08 | 53.00 | 188.6792 | 43.13 | 2026-07-27 | VERIFIED | US strategic rare-earth supply chain. 🚨 New 52-week low (41.12 intraday); −7.50% on 7/24; rare-earth oversupply/NdPr price fears; no verified company impairment; Q2 moved to Aug 6 |
 | BE | OPEN | 2026-07-10 | 244.61 | 40.8814 | 188.18 | 2026-07-27 | VERIFIED | Distributed power for AI infrastructure. 🚨 −14.91% on 7/24 (gapped down, never traded above open); Panama/EdgeMode deal buzz failed to hold; two securities-fraud investigation notices filed 7/17; Q2 due Jul 28 after close |
 | KTOS | OPEN | 2026-07-10 | 48.19 | 207.5119 | 49.45 | 2026-07-27 | VERIFIED | Defense, space and unmanned-systems order growth; ~$156M sole-source counter-UAS IDIQ award 7/21; Elroy Air manufacturing deal 7/20; Q2 confirmed Aug 4 after close |
-| RMBS | OPEN | UNKNOWN | 115.00 | 86.9565 | 96.42 | 2026-07-27 | VERIFIED | DDR5 memory-interface demand; quantity 86.9565 derived from user-confirmed $10,000 sizing ÷ recorded entry 115.00 (2026-07-27); −6.96% on 7/24 with no company catalyst (semis/AI-memory pullback); Q2 due Jul 27 after close |
+| RMBS | OPEN | UNKNOWN | 115.00 | 86.9565 | 96.42 | 2026-07-27 | VERIFIED | DDR5 memory-interface demand; quantity 86.9565 derived from user-confirmed $10,000 sizing ÷ recorded entry 115.00 (2026-07-27); −6.96% on 7/24 with no company catalyst (semis/AI-memory pullback); Q2 REPORTED 7/27 after close: adj EPS $0.77 vs $0.71 beat, Q3 guide midpoint slightly below consensus, AH flat |
 
 ## OPEN simulated positions
 
@@ -43,7 +42,7 @@ The user confirmed on 2026-07-27 that each of the five real positions was a **US
 
 Real positions carry real money and are **advisory only** (every action is 建议未执行); they are **not** part of the simulated wallet's market value or P&L. No simulated trade was booked; the simulated wallet is unchanged.
 
-Real book snapshot at 2026-07-24 official closes (cost basis $10,000 each, total $50,000): market value $42,917.74, unrealized −$7,082.26 (−14.16%). Per-name unrealized: PWR −6.08%, MP −22.08%, BE −24.41%, KTOS −1.74%, RMBS −16.51%.
+[HISTORICAL snapshot 2026-07-24 — 当前数值以 data/positions.md 为准] Real book at 7/24: mv $42,917.74 (−14.16%).
 
 ## CLOSED positions
 
@@ -61,7 +60,7 @@ The GEV and ETN positions are migrated confirmed baselines. No synthetic trade I
 
 Seven OPEN slots are confirmed from prior system state: five real and two simulated. July 15 prices are preserved only as reconciliation references; every scheduled run must refresh and validate prices before updating P&L or issuing a trade. No real or simulated execution was performed during this migration.
 
-## Morning logic cards — 2026-07-17 (using 2026-07-16 official close)
+## [HISTORICAL] Morning logic cards — 2026-07-17（已被 knowledge/tickers/*.md 逻辑卡取代；仅存档）
 
 | symbol | action | close trend / relative strength | verified catalyst and thesis | explicit take-profit condition | explicit stop-loss condition |
 |---|---|---|---|---|---|
@@ -76,7 +75,7 @@ Seven OPEN slots are confirmed from prior system state: five real and two simula
 
 ACTIVE rules: ACT-001 passed for verified closes; ACT-002 blocked exits because no position had both verified fundamental impairment and close confirmation; ACT-003 blocked profit exits because no qualifying catalyst realization/exhaustion was confirmed; ACT-004 authorized the ABT simulated entry. Market regime was classified as defensive, so the 50% position ceiling applies.
 
-## Out-of-band revaluation — 2026-07-25 (closing a 6-trading-day data gap)
+## [HISTORICAL] Out-of-band revaluation — 2026-07-25（结算历史现由 data/post-close.md 登记；仅存档）
 
 **Type: REVALUATION ONLY — no trades executed, no trade_id created, no quantity changed.** This was not a scheduled stage run; it is a reconciliation authorized by the user to repair state that had been stale since the 2026-07-16 close. Per CORE-002 no real position changed, and per the intraday/out-of-band rule no simulated trade was booked.
 
@@ -97,4 +96,4 @@ Benchmarks 7/16 → 7/24: SPY 750.83 → 738.93 (−1.58%); QQQ 705.89 → 684.2
 
 **Exit-rule review (all 8 positions): no exit authorized.** ACT-002: no position combined verified fundamental impairment with official-close technical confirmation. ACT-003: no profit exit qualified — ABT is the only position in profit and neither catalyst-exhaustion nor its 104.76 take-profit level was confirmed at an official close (7/24 close 103.06). MP and BE are the two positions whose relative weakness is severe enough to warrant 🚨, but both lack verified company-level impairment: MP's decline is sector oversupply sentiment, and BE's is a failed deal rumour plus plaintiff-firm solicitations, neither of which is a verified fundamental break. Both are carried as 持有 with mandatory re-examination at the next official close, and BE's Q2 print on 7/28 is the decision point.
 
-**Fields deliberately NOT updated (would require fabrication):** holding days since entry, maximum close since entry, drawdown from peak, and 20/50/200-day moving averages for the five real positions. Computing these needs the full daily close series per symbol from each entry date, which was not retrieved in this pass. They are left as-is rather than estimated, per CORE-003. The next full POST_CLOSE run should populate them.
+**[RESOLVED 2026-07-28]** 持有天数/入场后最高收盘/回撤/MA20/MA50 已由 Alpha Vantage 日线序列计算（锚点全对），见 `data/analytics.md`；MA200 因免费层限制暂缺（显式标注）。

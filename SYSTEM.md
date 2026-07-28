@@ -1,6 +1,6 @@
 # 美股决策系统 · 总纲（SYSTEM.md）
 
-canonical_spec_version: 2.10
+canonical_spec_version: 2.11
 derived_from: strategy-playbook VERSION 2.0.0
 last_updated: 2026-07-27
 state_root: /Users/linqing.wang/Desktop/Claude/us-stock-system
@@ -251,6 +251,7 @@ CORE（引自 strategy-playbook VERSION 2.0.0）：
 
 ## 8. 变更记录
 
+- 2026-07-28 · v2.11 — **全系统僵尸数据清理 + Alpha Vantage 接入试用**。(1) 数据源：AV MCP 连接器接入，首日 18/18 锚点 0.00% 验证通过（试用 1/3 天）；借其日线序列**兑现搁置已久的承诺字段**——8 仓 MA20/MA50/入场后最高收盘/回撤/持有天数全部落地 `data/analytics.md`（MA200 免费层不可得，显式标注）。(2) 僵尸清理：system-state 轮转（44 个 7/27 前运行块移入 archive，主文件 210KB→93KB）；outbox 27 个探针残留文件归档；`system-state_wtest` 入 attic；账本双重 prior_price_as_of、过期 RMBS 财报预告、失效的 7/24 快照统计、已被 knowledge 取代的晨间逻辑卡与 7/25 重估叙事全部修正或标注 [HISTORICAL]；8 个 ticker 页头刷新至 7/27+技术位；alert-state 待确认信号更新（RMBS 已清、BE 今晚、ABT 距止盈 0.26%）；分析文档加 SUPERSEDED 横幅；SKILL preflight 描述补 W2/W5。
 - 2026-07-28 · v2.10 — **7/27 结算回补 + 复盘重定义 + 供应商决策**。(1) 7/27 GAP 关闭：历史页次晨回补法，8/8 双源 ≤0.09% 一次成功，估值推进至 7/27（钱包 99,862.49，C1–C6 全零，W1=0）；「历史页次晨回补」定为标准方法，「收盘后即抓报价页」列为禁止方法（sources.md）。RMBS Q2 超预期盘后平稳，RED_PENDING 解除。(2) **复盘重定义（用户裁定）**：reviews/=纯策略复盘（账目/跑偏根因/选股审计/教训/关注），系统事件只进 run-summary；模板入 SKILL。首篇策略复盘落地（结论：入场跑偏、管理未跑偏；规则化入场的 ABT 为最佳仓；L-008/009/010 入册）。(3) 供应商：stooq 与 yahoo-chart-API 沙箱实测不可达（勿重试）；已建议用户连接 Alpha Vantage MCP，连接后按晋升规则实测入册。
 - 2026-07-28 · v2.9 — **§13 数据分层管理落地**（用户指示：信息源/持仓/盘后三域系统化）。`integrity.APPROVED_SOURCES` 按指标分级注册表（实测来源+怪癖标志）+ `approved_for()`；`data/sources.md`（与代码强制同步）；`tools/refresh_data.py` 生成 `data/positions.md` 归一化视图；`data/post-close.md` 结算登记簿（7/16、7/24 VERIFIED；**7/27 GAP 显式登记**：盘中降级致结算未完成，估值仍在 7/24，W1 明日到限，补救路径已写明）。selftest 117→132 全绿（P1 可满足性、黑名单无交集、怪癖标志一致、文档同步、视图纯函数）。
 - 2026-07-27 · v2.8 — **推送格式按用户要求重写：交易便签化**。用户反馈推送冗长、罗列来源与“未核实”等内部问题。裁定：推送只含「代码·动作·一句原因」（+标题/成交/🚨），通常 <300 字；溯源、as-of、数据质量、管道故障等一律内部处理（run-summary/knowledge/escalations），**不推给用户**。L5（强制来源标注）撤销，反转为 **L6 内部事务泄漏检查**（来源域名/降级术语/升级项进正文即违规）。溯源验证本身不变（ACT-001/P1–P5 照做）。selftest 114→117 全绿。

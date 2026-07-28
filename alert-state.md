@@ -26,4 +26,6 @@ last_reconciled_at: 2026-07-27T17:01:33-04:00
 
 ## Pending close signals
 
-None recoverable from prior runs. Several intraday tasks failed from authorization/API issues; these are task-execution gaps, not validated market signals.
+- RMBS RED_PENDING_CLOSE (Q2 7/27) — **CLEARED 2026-07-28**: EPS beat verified, AH flat, position held.
+- BE Q2 (7/28 after close) — pending tonight; decision at post-earnings confirming close.
+- ABT take-profit 104.76 — 7/27 closed 104.49 (0.26% below); trigger requires official close >= 104.76 + catalyst-exhaustion confirmation.
