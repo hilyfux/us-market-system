@@ -4,43 +4,45 @@ schema_version: 2.0
 base_currency: USD
 initial_capital: 100000.000000
 last_reconciled_at: 2026-07-25T13:05:00+08:00
-valuation_date: 2026-07-27
+valuation_date: 2026-07-28
 valuation_status: VERIFIED
-valuation_source: 2026-07-27 official regular-session closes, 2 independent sources per symbol (stockanalysis history + roic), <=0.09% discrepancy; backfilled 2026-07-28
-prior_valuation_date: 2026-07-24 (superseded)
+valuation_source: 2026-07-28 official regular-session closes; wallet names GEV/ETN/ABT confirmed by 2 independent sources (stockanalysis history + roic) at 0.00–0.05%; backfilled 2026-07-29 morning via history-page method (AV daily quota exhausted at run time)
+prior_valuation_date: 2026-07-27 (superseded)
 
 ## Balances
 
 | item | USD |
 |---|---:|
 | cash | 85000.011991 |
-| GEV market value | 4779.250749 |
-| ETN market value | 4796.874984 |
-| ABT market value | 5286.347631 |
-| total market value | 14862.473364 |
-| total assets | 99862.485355 |
-| cumulative P&L | -137.514645 |
+| GEV market value | 4524.167466 |
+| ETN market value | 4647.905206 |
+| ABT market value | 5426.993113 |
+| total market value | 14599.065785 |
+| total assets | 99599.077776 |
+| cumulative P&L | -400.922224 |
 | realized P&L | 0.000000 |
-| unrealized P&L | -137.514645 |
-| position ratio | 14.882940% |
+| unrealized P&L | -400.922224 |
+| position ratio | 14.657834% |
 
 ## Position accounting
 
 | symbol | quantity | cost | cost basis | reference close | market value | unrealized P&L |
 |---|---:|---:|---:|---:|---:|---:|
-| GEV | 4.7957 | 1042.60 | 4999.996820 | 996.57 | 4779.250749 | -220.746071 |
-| ETN | 12.0331 | 415.52 | 4999.993712 | 398.64 | 4796.874984 | -203.118728 |
-| ABT | 50.5919 | 98.83 | 4999.997477 | 104.49 | 5286.347631 | 286.350154 |
+| GEV | 4.7957 | 1042.60 | 4999.996820 | 943.38 | 4524.167466 | -475.829354 |
+| ETN | 12.0331 | 415.52 | 4999.993712 | 386.26 | 4647.905206 | -352.088506 |
+| ABT | 50.5919 | 98.83 | 4999.997477 | 107.27 | 5426.993113 | 426.995636 |
 
 ## Validation
 
-`cash + market_value = 85000.011991 + 14862.473364 = 99862.485355`
+`cash + market_value = 85000.011991 + 14599.065785 = 99599.077776`
 
-`total_assets - initial_capital = -137.514645`
+`total_assets - initial_capital = -400.922224`
 
-Accounting difference: `0.000000`, within the required USD 0.05 tolerance. Both conservation identities recomputed at full precision on 2026-07-25 and both returned exactly 0.000000.
+Accounting difference: `0.000000`, within the required USD 0.05 tolerance. C1–C6 revalidated by preflight after this 2026-07-28 revaluation (no trades).
 
-July 27 official closes passed the data gate (ACT-001; 2-source, <=0.09%): every symbol confirmed by >=2 independent sources at 0.00% discrepancy, correct session date, official regular close (after-hours prints explicitly excluded). Real positions remain intentionally excluded from market value because their quantities are UNKNOWN.
+July 28 official closes passed the data gate (ACT-001) for the wallet names: GEV/ETN/ABT each confirmed by >=2 independent sources (stockanalysis history + roic) at 0.00–0.05% discrepancy, correct session date, official regular close (after-hours prints explicitly excluded). Real positions remain intentionally excluded from market value because their quantities are UNKNOWN.
+
+**Settlement 2026-07-27 → 2026-07-28 (backfilled 2026-07-29 morning, no trades):** total assets 99862.49 → 99599.08 (−263.41); drivers: GEV −255.08, ETN −148.97, ABT +140.65. ABT closed 107.27, now ABOVE the 104.76 take-profit level (held — no catalyst-exhaustion/reversal at the close; a fresh entry-high on strength is not exhaustion). Book down on the day vs SPY +0.24% — concentration in the AI-power theme (GEV/ETN) which de-rated; ABT cushioned.
 
 **[HISTORICAL] Revaluation 2026-07-16 → 2026-07-24 (no trades):** total assets 99737.766259 → 99942.664497, **+204.898238**; cumulative P&L −262.233741 → −57.335503, i.e. the drawdown narrowed by USD 204.90 to −0.0573% of initial capital. Cash unchanged at 85000.011991 (zero trades). Position ratio 14.78% → 14.95%, far below the defensive-regime 50% ceiling, so ACT-004 is non-binding.
 

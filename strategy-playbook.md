@@ -55,7 +55,16 @@ last_updated: 2026-07-16
 
 ## HYPOTHESIS
 
-None. New hypotheses need at least three independent trading days or five relevant samples before promotion.
+- HYP-001 — Crowded-theme "sell the news" (post-beat close reversal)
+  - Environment: crowded/high-expectation theme
+  - Trigger: a name reports an earnings beat with raised guidance, yet the next official close fully retraces the event-driven gain (AH pop given back) alongside broad sell-side PT cuts
+  - Proposed action impact: treat as an over-crowding/over-expectation signal — reduce willingness to chase that theme; do NOT force an exit (thesis intact) but avoid adds
+  - Sample count: 1 (BE 2026-07-29) — needs >=3 independent trading days or 5 samples before promotion
+  - Validation metric: names showing this pattern subsequently underperform their theme peers over the next 3–5 sessions
+  - Enabled: no (HYPOTHESIS only)
+  - Source lesson: lessons.md#L-011
+
+New hypotheses need at least three independent trading days or five relevant samples before promotion.
 
 ## REJECTED
 
