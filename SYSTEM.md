@@ -1,8 +1,8 @@
 # 美股决策系统 · 总纲（SYSTEM.md）
 
-canonical_spec_version: 2.11
-derived_from: strategy-playbook VERSION 2.0.0
-last_updated: 2026-07-27
+canonical_spec_version: 2.12
+derived_from: strategy-playbook VERSION 2.1.0
+last_updated: 2026-07-30
 state_root: /Users/linqing.wang/Desktop/Claude/us-stock-system
 
 ## 0. 机制以代码为准，本文只写策略
@@ -36,6 +36,8 @@ state_root: /Users/linqing.wang/Desktop/Claude/us-stock-system
 ## 1. 系统概述与数据流
 
 这是一个**单一决策闭环**，由**一个**定时任务 `us-market-system` 按美东时间自动路由到晨间/盘前/盘中/盘后四个阶段驱动，共享同一个状态目录。核心思想：账本是唯一真源，数据不可靠时只持有，状态写入并校验通过后才推送。
+
+**目标与好循环（2026-07-30 明确）**：系统运行**单一模拟(demo)盘**，目标是**在 demo 盘上持续盈利**。四阶段构成好循环——盘前调研与策略制定 → 盘中监控与策略执行 → 盘后复盘与策略优化（把教训固化为 playbook 规则，见 §12 与 strategy-playbook ACT-005/006/007）——每一轮复盘都应让选股/风控规则更好，盈利能力随之复利提升。
 
 每个任务运行时**按此顺序**读取状态文件：
 `portfolio-ledger.md → sim-wallet.md → strategy-playbook.md → alert-state.md → system-state.md`
@@ -81,16 +83,16 @@ state_root: /Users/linqing.wang/Desktop/Claude/us-stock-system
 
 CORE（引自 strategy-playbook VERSION 2.0.0）：
 - CORE-001 账本是持仓/交易唯一真源；钱包只覆盖模拟资金。
-- CORE-002 真实持仓的数量/状态只有在用户明确确认成交后才变更。
+- CORE-002 系统运行**单一模拟(demo)盘**；持仓的建仓/加仓/减仓/平仓由系统在 MORNING/POST_CLOSE 执行并落账（唯一 trade_id + 账务校验）。**对既有仓的重定义（成本更正、外部持仓并入）须经用户明确确认**。2026-07-30 起：原「顾问性真实仓」已按用户指示并入模拟盘，"建议未执行"分离废止。
 - CORE-003 数据未核实/过期/冲突时不得交易，唯一动作为 `持有` 并记录失败。
 - CORE-004 绝不仅凭固定涨跌幅或盘中触价交易。
 - CORE-005 状态写入与账务校验成功之后才推送。
 
 数据门 **ACT-001**（system control）：来源冲突 >1%、日期错误、盘中报价延迟 >20 分钟、或缺正式收盘 → 阻断建仓/加仓/减仓/平仓，动作只能 `持有`，记录 `DATA_FAILURE`。
 
-真实/模拟分离：
-- 真实持仓：所有动作都是**建议未执行**；真实数量未知者不计入钱包市值与组合盈亏。
-- 盘中阶段：只分析与标记风险，不执行真实或模拟交易，不改账本/钱包；任何减仓/平仓/止盈/止损均为建议未执行，留待正式收盘确认。
+单一模拟盘（2026-07-30 起，取代旧「真实/模拟分离」）：
+- 全部持仓属于同一个模拟(demo)盘，系统主动交易全部标的以增长 demo 盈亏。旧的「真实持仓=建议未执行、不入钱包」分离已废止（五只原顾问仓按用户指示以成本基并入，见账本 Migration note）。
+- 盘中阶段：仍只分析与标记风险，不执行任何交易、不改账本/钱包；任何减仓/平仓/止盈/止损均"建议未执行"，留待正式收盘（MORNING/POST_CLOSE）确认执行。此纪律对全部标的一致。
 - 模拟交易：仅晨间或盘后可执行；必须生成唯一 `trade_id = 市场交易日-代码-动作-序号`，并记录含时区的 `executed_at`、`market_session_date`、`valuation_source_date`，先查重再同时写账本与钱包。
 - 账务校验（误差 ≤ USD 0.05）：由 `lib/integrity.py: validate_accounting` 执行 C1–C6。
 
@@ -122,8 +124,8 @@ CORE（引自 strategy-playbook VERSION 2.0.0）：
 **槽位语义**（旧字段 `open_slots` 含义不明，而它直接决定能否建仓）：
 由 `slot_report()` 返回 `occupied / available / manageable / frozen / sim_open / real_tracked`。
 **2026-07-27 变更**：8 槽风险预算**只对模拟持仓计数**——模拟盘拥有独立的 8 槽。真实持仓是用户真金白银、仅供顾问跟踪（一律「建议未执行」），单列在 `real_tracked`，**不占用模拟预算**。旧口径把两者混在一个 8 槽里，导致 5 只真实持仓占满、模拟盘 8.5 万现金在 50% 上限下无槽可用（结构性死锁）——已解除。
-`frozen` = 真实持仓且数量未知（现已全部补齐，为 0），单列不再挤占预算。
-当前状态：模拟盘 **占用 3/8、可用 5**（GEV/ETN/ABT）；真实持仓 5 只单列跟踪、不占槽；DEFENSIVE 上限 50%，模拟盘已投 ~15%（约 1.49 万），可再部署约 3.5 万美元。
+`slot_report()` 的 real/frozen 字段保留（若将来再引入真实仓仍可用），当前统一模拟盘下 `real_tracked = frozen = 0`。
+**当前状态（2026-07-30 统一模拟盘后）**：模拟盘 **占用 8/8、可用 0、满槽**（GEV/ETN/ABT/PWR/MP/BE/KTOS/RMBS）；总资产 **91,590.15**、累计盈亏 **−8,409.85（−8.41%）**、仓位率 **57.59%**。仓位率高于 DEFENSIVE 50% 上限——系新旧仓并入所致，非新交易；ACT-004 据此**暂停一切新建仓**，直到仓位率回落或环境上移；满槽后新机会只能通过替换进入（候选高于最弱持仓 ≥5 分且旧仓满足退出规则）。
 
 ## 5. 通知协议（企业微信，经 outbox 转发）
 
@@ -251,6 +253,7 @@ CORE（引自 strategy-playbook VERSION 2.0.0）：
 
 ## 8. 变更记录
 
+- 2026-07-30 · v2.12 — **统一模拟盘 + 选股策略首次迭代落地**。(1) **持仓统一**（用户指示）：原五只顾问性真实仓（PWR/MP/BE/KTOS/RMBS）按成本基并入单一模拟盘，初始资金维持 $100,000、现金按成本借记（85,000.01→38,843.35），全部 8 仓现由系统主动交易；"建议未执行/不入钱包"分离废止（CORE-002 改写）。迁移后：总资产 91,590.15、累计 −8,409.85（−8.41%）、仓位率 57.59%（高于 DEFENSIVE 50%→ACT-004 暂停新建仓）；C1–C6 diff=0、槽位 8/8。(2) **成本更正**：RMBS 115→114（股数留、成本基 $9,913.04）；PWR/MP/BE/KTOS 以 2026-07-16 官方收盘为成本代理（股数留）。(3) **单一真源修复**：`refresh_data.py`/`state.py` 曾把真实仓成本**硬编码**（忽略账本），违反 CORE-001——改为从账本 cost 列派生，selftest 加锁。(4) **选股规则固化**（playbook 2.0.0→2.1.0）：ACT-005 事件封锁（财报前 ≤5 交易日不建）、ACT-006 论题集中度 ≤25% NAV、ACT-007 高 beta 折半，由 `lib/selection.py` 实现、selftest +14 断言。(5) 复盘重构（7/29）：量化归因 + 触发式减仓 + 根因深挖。selftest 132→147 全绿。
 - 2026-07-28 · v2.11 — **全系统僵尸数据清理 + Alpha Vantage 接入试用**。(1) 数据源：AV MCP 连接器接入，首日 18/18 锚点 0.00% 验证通过（试用 1/3 天）；借其日线序列**兑现搁置已久的承诺字段**——8 仓 MA20/MA50/入场后最高收盘/回撤/持有天数全部落地 `data/analytics.md`（MA200 免费层不可得，显式标注）。(2) 僵尸清理：system-state 轮转（44 个 7/27 前运行块移入 archive，主文件 210KB→93KB）；outbox 27 个探针残留文件归档；`system-state_wtest` 入 attic；账本双重 prior_price_as_of、过期 RMBS 财报预告、失效的 7/24 快照统计、已被 knowledge 取代的晨间逻辑卡与 7/25 重估叙事全部修正或标注 [HISTORICAL]；8 个 ticker 页头刷新至 7/27+技术位；alert-state 待确认信号更新（RMBS 已清、BE 今晚、ABT 距止盈 0.26%）；分析文档加 SUPERSEDED 横幅；SKILL preflight 描述补 W2/W5。
 - 2026-07-28 · v2.10 — **7/27 结算回补 + 复盘重定义 + 供应商决策**。(1) 7/27 GAP 关闭：历史页次晨回补法，8/8 双源 ≤0.09% 一次成功，估值推进至 7/27（钱包 99,862.49，C1–C6 全零，W1=0）；「历史页次晨回补」定为标准方法，「收盘后即抓报价页」列为禁止方法（sources.md）。RMBS Q2 超预期盘后平稳，RED_PENDING 解除。(2) **复盘重定义（用户裁定）**：reviews/=纯策略复盘（账目/跑偏根因/选股审计/教训/关注），系统事件只进 run-summary；模板入 SKILL。首篇策略复盘落地（结论：入场跑偏、管理未跑偏；规则化入场的 ABT 为最佳仓；L-008/009/010 入册）。(3) 供应商：stooq 与 yahoo-chart-API 沙箱实测不可达（勿重试）；已建议用户连接 Alpha Vantage MCP，连接后按晋升规则实测入册。
 - 2026-07-28 · v2.9 — **§13 数据分层管理落地**（用户指示：信息源/持仓/盘后三域系统化）。`integrity.APPROVED_SOURCES` 按指标分级注册表（实测来源+怪癖标志）+ `approved_for()`；`data/sources.md`（与代码强制同步）；`tools/refresh_data.py` 生成 `data/positions.md` 归一化视图；`data/post-close.md` 结算登记簿（7/16、7/24 VERIFIED；**7/27 GAP 显式登记**：盘中降级致结算未完成，估值仍在 7/24，W1 明日到限，补救路径已写明）。selftest 117→132 全绿（P1 可满足性、黑名单无交集、怪癖标志一致、文档同步、视图纯函数）。

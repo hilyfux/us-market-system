@@ -1,12 +1,12 @@
 # Strategy Playbook
 
-VERSION: 2.0.0
-last_updated: 2026-07-16
+VERSION: 2.1.0
+last_updated: 2026-07-30
 
 ## CORE
 
 - CORE-001 — The ledger is the only position/trade truth; the wallet covers simulated capital only.
-- CORE-002 — Real position quantity or status changes only after explicit user execution confirmation.
+- CORE-002 — Single simulated (demo) book (as of 2026-07-30): the system actively trades all positions (build/add/reduce/close in MORNING/POST_CLOSE with a unique trade_id and accounting validation). Redefining an existing position (cost correction, migrating in an externally-held position) still requires explicit user confirmation. The former advisory "real position" separation is retired.
 - CORE-003 — No trade on unverified/stale/conflicting price data; the only allowed action is `持有` and the failure is recorded.
 - CORE-004 — Never trade solely from a fixed percentage move or an intraday price touch.
 - CORE-005 — State writes and accounting validation must succeed before a notification is sent.
@@ -53,13 +53,48 @@ last_updated: 2026-07-16
 - Enabled: 2026-07-16
 - Rollback: any failed gate blocks the trade
 
+### ACT-005 — Event-timing gate (enter after confirmation, not before)
+
+- Environment: new-position scan (build/add only; never affects holding existing positions)
+- Trigger: the candidate has a binary catalyst (earnings) within 5 trading sessions → block initiation; wait for the post-event confirming official close
+- Action impact: no new build/add inside the blackout; existing positions still `持有`
+- Sample count: promoted from L-010 (ABT post-beat entry = only clearly profitable name; BE/RMBS pre-earnings entries bled)
+- Validation metric: no new position initiated within 5 sessions before its earnings
+- Enabled: 2026-07-30
+- Rollback: revert if event-confirmed entries do not outperform pre-event entries over the next 10 fresh entries
+- Implementation: `lib/selection.py: event_timing_gate` (selftest-locked)
+
+### ACT-006 — Thesis-concentration cap at entry
+
+- Environment: new-position scan
+- Trigger: after the proposed build, combined **same-thesis** exposure (theme tag, not GICS industry) would exceed 25% of NAV
+- Action impact: block the build (or halve it to fit); unregistered-theme names are conservatively rejected until tagged
+- Sample count: promoted from L-009/L-012 (a single FOMC catalyst hit 45% of the book at once)
+- Validation metric: no build leaves same-thesis exposure above 25% of NAV
+- Enabled: 2026-07-30
+- Rollback: adjust cap only via a documented review; never silently
+- Implementation: `lib/selection.py: theme_cap_gate` + `THEME_TAGS` (selftest-locked)
+
+### ACT-007 — Volatility-scaled sizing
+
+- Environment: new-position scan
+- Trigger: candidate is high-beta/high-volatility
+- Action impact: halve the nominal starting size (base 5% → 2.5%) before applying ACT-004/ACT-006
+- Sample count: promoted from L-008 (equal-weight sizing across high-vol names turned one week's tape into the entire cost basis)
+- Validation metric: every high-beta new entry is sized at ≤ half the base
+- Enabled: 2026-07-30
+- Rollback: revert if half-sizing measurably worsens risk-adjusted return without reducing drawdown
+- Implementation: `lib/selection.py: volatility_scaled_size` (selftest-locked)
+
+> ACT-005/006/007 run together in `selection.screen_new_position()` during the MORNING opportunity scan, upstream of ACT-004's score/risk gates. They encode the daily-review purpose: reflection → codified rule → measurable on the ledger.
+
 ## HYPOTHESIS
 
 - HYP-001 — Crowded-theme "sell the news" (post-beat close reversal)
   - Environment: crowded/high-expectation theme
   - Trigger: a name reports an earnings beat with raised guidance, yet the next official close fully retraces the event-driven gain (AH pop given back) alongside broad sell-side PT cuts
   - Proposed action impact: treat as an over-crowding/over-expectation signal — reduce willingness to chase that theme; do NOT force an exit (thesis intact) but avoid adds
-  - Sample count: 1 (BE 2026-07-29) — needs >=3 independent trading days or 5 samples before promotion
+  - Sample count: 2 mixed (1 support, 1 counter) — BE 2026-07-29 set the sell-the-news close; BE 2026-07-30 (+26.5% on Mizuho upgrade to Outperform, just 1 session later) is a **counter-sample** (sharp mean-reversion, not continued underperformance). Net evidence inconclusive; still needs >=3 independent trading days or 5 samples before promotion. Do NOT reject on the single counter-day (no single-day overfit).
   - Validation metric: names showing this pattern subsequently underperform their theme peers over the next 3–5 sessions
   - Enabled: no (HYPOTHESIS only)
   - Source lesson: lessons.md#L-011
@@ -72,4 +107,5 @@ None recorded.
 
 ## Change log
 
+- 2.1.0 (2026-07-30) — **First selection-strategy iteration promoted from daily reviews.** Codified three enforced entry gates from L-008/L-009/L-010/L-012: ACT-005 event-timing (no initiation ≤5 sessions before earnings; wait for the confirming close), ACT-006 thesis-concentration cap (same-theme exposure ≤25% NAV at entry), ACT-007 volatility-scaled sizing (half-size high-beta). Backed by `lib/selection.py` (deterministic) and selftest (13 new locking assertions). Rationale: the only clearly profitable name (ABT) was the one entered *after* earnings confirmation; the deep drawdowns came from pre-earnings entries stacked into one 45%-concentrated theme. HYP-001 (sell-the-news) intentionally NOT promoted — only 1 sample, below the ≥3-day/5-sample bar.
 - 2.0.0 — Consolidated action vocabulary, data gating, real/sim separation, accounting order, and strategy promotion requirements across morning, intraday and post-close tasks.

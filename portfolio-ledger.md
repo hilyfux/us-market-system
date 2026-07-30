@@ -4,45 +4,53 @@ schema_version: 2.0
 base_currency: USD
 slot_limit: 8
 last_reconciled_at: 2026-07-25T13:05:00+08:00
-price_as_of: 2026-07-28 regular close (VERIFIED; wallet names GEV/ETN/ABT 2 independent sources 0.00–0.05%; backfilled 2026-07-29 morning via history-page method after AV daily quota exhausted)
-prior_price_as_of: 2026-07-27 regular close (superseded)
+price_as_of: 2026-07-29 regular close (VERIFIED; wallet names GEV/ETN/ABT 2 independent fresh sources — stockanalysis history + Google Finance — 0.00%; backfilled 2026-07-30 morning via history-page method after AV daily quota exhausted; roic/stocktitan/stockscan still lagged 7/28 at run time)
+prior_price_as_of: 2026-07-28 regular close (superseded)
 
 ## Invariants
 
 - This file is the only source of truth for positions and trade history.
 - Position status is only `OPEN` or `CLOSED`.
-- Real positions change quantity/status only after explicit user confirmation of execution.
+- **2026-07-30 — unified simulated (demo) book.** Per user directive, ALL positions are now part of the single simulated account; the system actively trades all of them to grow the demo P&L. The former "advisory / 建议未执行 real positions" distinction is retired (the five were migrated into the simulated book at their recorded cost basis — see migration note below). Cost-basis corrections or migrations still require explicit user confirmation (CORE-002 intent preserved).
 - Simulated trades require a unique `trade_id`, wallet update, and post-trade accounting validation.
-- Unknown real quantities are excluded from wallet market value and portfolio P&L.
+- Initial capital stays US$100,000; max 8 positions. Migrated positions were booked at cost, debiting cash accordingly, so accounting conservation (C1–C6) holds across all 8.
 
 ## OPEN real positions
 
-| symbol | status | opened_on | cost | quantity | last_close | close_date | data_status | thesis |
-|---|---|---:|---:|---:|---:|---:|---|---|
-| PWR | OPEN | 2026-07-08 | 666.33 | 15.0076 | 588.36 | 2026-07-28 | VERIFIED | Grid and data-center electrical infrastructure demand; record backlog intact; Q2 due Jul 30 pre-open. JPMorgan cut to Neutral (PT 714) in gap window; −4.28% on 7/24 with no company-specific catalyst |
-| MP | OPEN | 2026-07-08 | 53.00 | 188.6792 | 41.28 | 2026-07-28 | VERIFIED | US strategic rare-earth supply chain. 🚨 New 52-week low (41.12 intraday); −7.50% on 7/24; rare-earth oversupply/NdPr price fears; no verified company impairment; Q2 moved to Aug 6 |
-| BE | OPEN | 2026-07-10 | 244.61 | 40.8814 | 166.84 | 2026-07-28 | VERIFIED | Distributed power for AI infrastructure. Q2 REPORTED 7/28 after close: record quarter, adj EPS $0.78 vs $0.41 cons (big beat), FY26 adj EPS raised to $2.55–2.85 vs $2.17 cons; AH +12.7% (188.00). Thesis CONFIRMED — the −11.34% regular close was pre-earnings de-risking. 7/29 official close is the confirmation point |
-| KTOS | OPEN | 2026-07-10 | 48.19 | 207.5119 | 48.64 | 2026-07-28 | VERIFIED | Defense, space and unmanned-systems order growth; ~$156M sole-source counter-UAS IDIQ award 7/21; Elroy Air manufacturing deal 7/20; Q2 confirmed Aug 4 after close |
-| RMBS | OPEN | UNKNOWN | 115.00 | 86.9565 | 87.75 | 2026-07-28 | VERIFIED | DDR5 memory-interface demand; quantity 86.9565 derived from user-confirmed $10,000 sizing ÷ recorded entry 115.00 (2026-07-27); −6.96% on 7/24 with no company catalyst (semis/AI-memory pullback); Q2 REPORTED 7/27 after close: adj EPS $0.77 vs $0.71 beat, Q3 guide midpoint slightly below consensus, AH flat |
+_None. All formerly-advisory real positions were migrated into the simulated book on 2026-07-30 (see migration note below and the simulated table)._
 
 ## OPEN simulated positions
 
 | symbol | status | opened_on | cost | quantity | cost_basis | last_close | close_date | market_value | unrealized_pnl | data_status | thesis |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---:|---|---|
-| GEV | OPEN | BASELINE_MIGRATED | 1042.60 | 4.7957 | 4999.996820 | 943.38 | 2026-07-28 | 4524.167466 | -475.829354 | VERIFIED | Grid/power-gen capex. **Q2 REPORTED 7/22 pre-open**: EPS $2.47 adj vs $3.17 cons (MISS), revenue $11.1B vs $10.8B (BEAT), orders $24.2B +88% YoY, backlog $176B, "mostly sold out through 2030", FY26 revenue guidance RAISED to $45.5–46.5B (2nd consecutive raise). Drag: wind orders −40%, offshore cost, tariff risk. Reaction 7/22 −8.69% → 7/23 +4.69% → 7/24 −1.59%. Closed below 50d MA 1033.10 |
-| ETN | OPEN | BASELINE_MIGRATED | 415.52 | 12.0331 | 4999.993712 | 386.26 | 2026-07-28 | 4647.905206 | -352.088506 | VERIFIED | Electrification and data-center power management; thesis intact, no verified impairment. Best relative performer among laggards (+3.55pp vs SPY in gap). Dividend $1.10 declared 7/21. Q2 due Jul 31 pre-open |
-| ABT | OPEN | 2026-07-17 | 98.83 | 50.5919 | 4999.997477 | 107.27 | 2026-07-28 | 5426.993113 | 426.995636 | VERIFIED | **Thesis CONFIRMED and strengthened.** Q2 (7/16) EPS $1.31 vs $1.28 beat, revenue $12.59B vs $12.52B, FY26 adj EPS raised to $5.45–5.60. Since entry: broad PT raises (JPM 120, BofA 115, Citi 112, Daiwa 92→103), no downgrades; 7/24 +2.29% on TWO legal wins (shareholder formula suit dismissed; 7th Circuit appeal won). New risks: 7/17 cybersecurity incidents (cancer diagnostics + LabCentral) with patient class actions; 7/24 FreeStyle Libre 3 class action. Stop-loss trigger (official close < 95.86) NOT hit; +4.28% vs cost |
+| GEV | OPEN | BASELINE_MIGRATED | 1042.60 | 4.7957 | 4999.996820 | 900.28 | 2026-07-29 | 4317.472796 | -682.524024 | VERIFIED | Grid/power-gen capex. **Q2 REPORTED 7/22 pre-open**: EPS $2.47 adj vs $3.17 cons (MISS), revenue $11.1B vs $10.8B (BEAT), orders $24.2B +88% YoY, backlog $176B, "mostly sold out through 2030", FY26 revenue guidance RAISED to $45.5–46.5B (2nd consecutive raise). Drag: wind orders −40%, offshore cost, tariff risk. Reaction 7/22 −8.69% → 7/23 +4.69% → 7/24 −1.59%. Closed below 50d MA 1033.10 |
+| PWR | OPEN | 2026-07-08 (migrated 7-30) | 631.02 | 15.0076 | 9470.095752 | 561.14 | 2026-07-29 | 8421.364664 | -1048.731088 | VERIFIED | Grid/data-center electrical infra; record backlog. Q2 2026-07-30 pre-open — hold into earnings (L-002). Migrated from advisory→sim 2026-07-30; cost = 7/16 close proxy |
+| MP | OPEN | 2026-07-08 (migrated 7-30) | 45.46 | 188.6792 | 8577.356432 | 38.10 | 2026-07-29 | 7188.677520 | -1388.678912 | VERIFIED | US rare-earth supply chain 🚨; oversupply sentiment, no verified impairment (L-005); Q2 Aug 6. Migrated 2026-07-30; cost = 7/16 close proxy |
+| BE | OPEN | 2026-07-10 (migrated 7-30) | 206.73 | 40.8814 | 8451.411822 | 163.75 | 2026-07-29 | 6694.329250 | -1757.082572 | VERIFIED | Distributed power for AI; Q2 (7/28) record beat but price fully retraced next close (L-011); no impairment → hold. Migrated 2026-07-30; cost = 7/16 close proxy |
+| KTOS | OPEN | 2026-07-10 (migrated 7-30) | 46.96 | 207.5119 | 9744.758824 | 43.88 | 2026-07-29 | 9105.622172 | -639.136652 | VERIFIED | Defense/unmanned order growth; Q2 Aug 4; 7/29 insider-selling headline = noise pending confirmation (L-005). Migrated 2026-07-30; cost = 7/16 close proxy |
+| RMBS | OPEN | 2026-07 (migrated 7-30) | 114.00 | 86.9565 | 9913.041000 | 82.81 | 2026-07-29 | 7200.867765 | -2712.173235 | VERIFIED | DDR5/AI-memory; Q2 (7/27) beat, Q3 guide soft; no company catalyst → hold. Migrated 2026-07-30; cost = user-corrected 114.00 |
+| ETN | OPEN | BASELINE_MIGRATED | 415.52 | 12.0331 | 4999.993712 | 361.88 | 2026-07-29 | 4354.538228 | -645.455484 | VERIFIED | Electrification and data-center power management; thesis intact, no verified impairment. Best relative performer among laggards (+3.55pp vs SPY in gap). Dividend $1.10 declared 7/21. Q2 due Jul 31 pre-open |
+| ABT | OPEN | 2026-07-17 | 98.83 | 50.5919 | 4999.997477 | 108.00 | 2026-07-29 | 5463.925200 | 463.927723 | VERIFIED | **Thesis CONFIRMED and strengthened.** Q2 (7/16) EPS $1.31 vs $1.28 beat, revenue $12.59B vs $12.52B, FY26 adj EPS raised to $5.45–5.60. Since entry: broad PT raises (JPM 120, BofA 115, Citi 112, Daiwa 92→103), no downgrades; 7/24 +2.29% on TWO legal wins (shareholder formula suit dismissed; 7th Circuit appeal won). New risks: 7/17 cybersecurity incidents (cancer diagnostics + LabCentral) with patient class actions; 7/24 FreeStyle Libre 3 class action. Stop-loss (official close < 95.86) NOT hit. 2026-07-29 close 108.00 = 2nd consecutive close above 104.76 take-profit, but a fresh high on strength (only green name on a broad risk-off day) — not exhaustion → held full, no trim (ACT-003/L-003); +9.28% vs cost |
 
 ## Position sizing note — 2026-07-27 (user-confirmed $10,000 per real position)
 
 The user confirmed on 2026-07-27 that each of the five real positions was a **US$10,000** initial investment. This is treated as confirmed cost basis per CORE-002.
 
-- **RMBS**: entry price 115.00 was already on record → quantity = 10000 ÷ 115.00 = **86.9565 shares**. Now valued/manageable (no longer frozen). Real positions remain excluded from the simulated wallet.
-- **PWR, MP, BE, KTOS**: on 2026-07-27 the user approved deriving quantity from each position's **entry-date official close as a documented PROXY fill** (exact broker fills not available). Quantities set: PWR 15.0076 @ proxy 666.33 (2026-07-08 close); MP 188.6792 @ 53.00 (2026-07-08); BE 40.8814 @ 244.61 (2026-07-10); KTOS 207.5119 @ 48.19 (2026-07-10). Source: stockanalysis.com history (S&P Global Market Intelligence); each proxy cross-checked against the ledger's recorded 2026-07-16 closes with 0.00% mismatch. **These are PROXY cost bases, not confirmed fills** — replace with actual fills whenever the user provides them (`KEY#rN`-style correction). All five real positions are now valued/manageable; frozen count 5 → 0.
+- **RMBS**: entry price **corrected 115.00 → 114.00 per user (2026-07-30)**; per user choice the quantity is held at **86.9565 shares** (not rescaled), so cost basis = 86.9565 × 114.00 = **$9,913.04** (previously $10,000 at 115.00). Now valued/manageable (no longer frozen). Real positions remain excluded from the simulated wallet.
+- **PWR, MP, BE, KTOS**: proxy cost **re-referenced to the 2026-07-16 official close per user (2026-07-30)** — for positions without a confirmed fill, the 7/16 VERIFIED close is the recorded cost price. Per user choice the **share counts are kept** (not rescaled, same convention as RMBS), so cost basis floats off the earlier $10,000 anchor. Set: PWR 15.0076 @ 631.02 → basis $9,470.10; MP 188.6792 @ 45.46 → $8,577.36; BE 40.8814 @ 206.73 → $8,451.41; KTOS 207.5119 @ 46.96 → $9,744.76. (Superseded prior entry-date proxies: PWR 666.33/7-08, MP 53.00/7-08, BE 244.61/7-10, KTOS 48.19/7-10.) 7/16 closes are VERIFIED in data/post-close.md. **Still PROXY cost bases, not confirmed fills** — replace with actual fills whenever the user provides them (`KEY#rN`-style correction). All five real positions valued/manageable; frozen count 0. Real real-book cost basis total now $46,156.66 (incl. RMBS $9,913.04).
 
-Real positions carry real money and are **advisory only** (every action is 建议未执行); they are **not** part of the simulated wallet's market value or P&L. No simulated trade was booked; the simulated wallet is unchanged.
+## Migration note — 2026-07-30 (unify advisory positions into the demo book)
 
-[HISTORICAL snapshot 2026-07-24 — 当前数值以 data/positions.md 为准] Real book at 7/24: mv $42,917.74 (−14.16%).
+Per user directive, the five formerly-advisory positions (PWR, MP, BE, KTOS, RMBS) were folded into the single simulated (demo) account, which the system now actively trades. Method (best-practice, honest P&L carry-over):
+
+- **Initial capital unchanged at $100,000** (existing hard rule preserved).
+- Each migrated position is booked at its **recorded cost basis** (7/16-close proxy; RMBS at user-corrected 114.00), i.e. treated as already purchased. Total migrated cost basis = **$46,156.66**.
+- **Cash debited** by that amount: 85,000.011991 − 46,156.66 → **38,843.348161**. Combined with the pre-existing three sim names, sum(cost_basis) over all 8 = $61,156.65 and cash = 100,000 − 61,156.65 (C2 holds).
+- Post-migration book (7/29 closes): market value **52,746.797595**, total assets **91,590.145756**, cumulative P&L **−8,409.854244 (−8.41%)**, position ratio **57.59%**.
+- The "advisory / 建议未执行 / excluded from wallet" treatment is **retired**; all 8 are now tradeable sim positions (execution in MORNING/POST_CLOSE, exits close-confirmed per ACT-002/003).
+- Note: 57.59% invested is above the DEFENSIVE 50% ceiling — a consequence of migration, not a new trade; ACT-004 blocks new builds until exposure falls or regime lifts. Costs remain PROXY until real fills are provided (`KEY#rN` correction).
+
+[HISTORICAL snapshot 2026-07-24 — superseded] Advisory book at 7/24: mv $42,917.74 (−14.16%).
 
 ## CLOSED positions
 

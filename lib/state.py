@@ -82,6 +82,7 @@ def load_positions(root: str) -> List[Dict[str, object]]:
             continue
         if section == "real":
             out.append({"symbol": cells[0], "status": cells[1], "kind": "real",
+                        "opened_on": cells[2], "cost": _num(cells[3]),
                         "quantity": cells[4], "last_close": _num(cells[5]),
                         "close_date": cells[6] if len(cells) > 6 else None})
         else:

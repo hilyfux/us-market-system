@@ -1,7 +1,7 @@
 # Alert State
 
 schema_version: 2.0
-last_reconciled_at: 2026-07-29T16:02:10-04:00
+last_reconciled_at: 2026-07-30T21:02:38+08:00
 
 ## Rules
 
@@ -34,10 +34,17 @@ last_reconciled_at: 2026-07-29T16:02:10-04:00
 | INTRADAY+2026-07-29+1000 | 2026-07-29T22:05:14+08:00 | enterprise_wechat | errcode=0 |
 | INTRADAY+2026-07-29+1230 | 2026-07-29T12:34:43-04:00 | enterprise_wechat | errcode=0 |
 | INTRADAY+2026-07-29+1530 | 2026-07-29T15:35:03-04:00 | enterprise_wechat | errcode=0 |
+| POSTCLOSE+2026-07-29 | 2026-07-30T04:43:51+08:00 | enterprise_wechat | errcode=0 |
+| MORNING+2026-07-29 | 2026-07-30T08:43:27+08:00 | enterprise_wechat | errcode=0 |
+| PREMARKET+2026-07-30 | 2026-07-30T20:34:45+08:00 | enterprise_wechat | errcode=0 |
+| INTRADAY+2026-07-30+1000 | 2026-07-30T22:05:05+08:00 | enterprise_wechat | errcode=0 |
+| INTRADAY+2026-07-30+1530 | 2026-07-30T15:35:00-04:00 | enterprise_wechat | errcode=0 |
 
 ## Pending close signals
 
 - RMBS RED_PENDING_CLOSE (Q2 7/27) — **CLEARED 2026-07-28**: EPS beat verified, position held.
-- BE Q2 (7/28 after close) — **CLEARED 2026-07-28** (fundamentals). 7/29 price-confirmation result: the +12.7% AH pop was **fully retraced** at the regular session (prelim ~163.8–165.7 vs 166.84), broad PT cuts. Thesis intact (record quarter), no verified impairment → held (advisory); no stop triggered. Price-vs-fundamentals divergence logged (lessons L-011). Exact close pending 7/30 morning backfill.
-- ABT take-profit 104.76 — still **ABOVE** at prelim 7/29 (~107.3–108.0, roughly flat vs 7/28 107.27 → fresh high, not exhaustion). Held: 止盈-减仓50% still awaits the first official-close exhaustion/reversal signal. Re-confirm on the 7/30-morning verified close.
-- 2026-07-29 settlement — **GAP**: at T+31min the official closes were not verifiable to the wallet ≥2-source ≤0.05% standard (ABT read 107.53/108.00/107.32; BE, MP also internally divergent). No trade, no price mutation; wallet stays 2026-07-28 VERIFIED. Backfill via history-page method 2026-07-30 morning.
+- BE Q2 (7/28 after close) — **CLEARED** (fundamentals). 7/29 price-confirmation **DONE (2026-07-30 morning backfill)**: verified close 163.75 (−1.85%, intraday 185.66→157.33) — the +12.7% AH pop fully retraced, broad PT cuts (Jefferies/BMO/Truist to Hold). Thesis intact (record quarter), no verified impairment → held (advisory); no stop triggered. Sell-the-news divergence confirmed (lessons L-011 / HYP-001).
+- ABT take-profit 104.76 — **REVERSAL SIGNAL TRIGGERED 2026-07-30 (pending 2-source verify).** Observed 7/30 close 105.54 (−2.28%) is BELOW the prior-day (7/29) low 106.97 and was the only red name on a broad risk-on rebound day (SPY +1.68%) = the first official-close exhaustion/reversal after two closes above 104.76 → the pre-registered ACT-003 trigger ("收盘跌破前日低点") is MET. Still above 104.76 (+6.8% vs cost). **止盈-减仓50% AUTHORIZED but NOT executed** tonight: single approved source only (AV quota exhausted) → data gate ACT-001 blocks. Execute at 2026-07-31 MORNING once the 7/30 close is verified by ≥2 independent sources. → YELLOW_PENDING_CLOSE.
+- PWR Q2 (2026-07-30 pre-open) — **CLEARED (fundamentals), thesis strengthened.** adj EPS $4.24 vs $3.31 consensus (big BEAT); FY26 adj EPS guide raised to $16.45-16.95 from $13.55-14.25; observed +16.8% to ~655.37 (above cost proxy 631.02, flipped to profit). "Hold into earnings" (L-002) paid off. No exhaustion → hold, no trim. Price VERIFIED pending 7/31 backfill.
+- 2026-07-30 settlement — **GAP (open)**: POST_CLOSE at T+31min, AV exhausted + stockanalysis table-vs-realtime divergence on big movers → P1 (≥2 sources) unmet. valuation_date held at 2026-07-29. Backfill + ABT take-profit execution at 2026-07-31 MORNING (see data/post-close.md).
+- 2026-07-29 settlement — **CLOSED → VERIFIED (2026-07-30 morning backfill)**: 8/8 closes settled; wallet names GEV 900.28 / ETN 361.88 / ABT 108.00 confirmed by 2 fresh independent sources (stockanalysis history + Google Finance) at 0.00% incl. OHLC. valuation_date advanced to 2026-07-29; wallet 99,135.95; C1–C6 diff=0; W1 lag=0.

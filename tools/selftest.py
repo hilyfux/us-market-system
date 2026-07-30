@@ -637,7 +637,7 @@ def test_data_layer():
     import refresh_data as rd
     fixture = [
         {"symbol": "RMBS", "kind": "real", "status": "OPEN", "quantity": "86.9565",
-         "last_close": "96.01", "close_date": "2026-07-24"},
+         "cost": "114.00", "last_close": "96.01", "close_date": "2026-07-24"},
         {"symbol": "ABT", "kind": "sim", "status": "OPEN", "quantity": "50.5919",
          "cost_basis": "4999.997477", "last_close": "103.06", "close_date": "2026-07-24",
          "market_value": "5214.001214", "unrealized_pnl": "214.003737"},
@@ -646,9 +646,41 @@ def test_data_layer():
     check("视图含统一表头与全部行",
           md.count("\n|---") == 1 and "RMBS" in md and "ABT" in md, md[:120])
     check("真实仓市值按 qty×close 计算（8348.69）", str(tot["real_mv"]) == "8348.69", str(tot))
-    check("真实仓盈亏 = mv − 10000（−1651.31）", str(tot["real_upnl"]) == "-1651.31", str(tot))
+    # 成本自账本 cost 列派生（cost×qty），非硬编码 10000：114×86.9565=9913.04 证明去硬编码
+    check("真实仓成本基 = 账本 cost×qty（9913.04）", str(tot["real_cost"]) == "9913.04", str(tot))
+    check("真实仓盈亏 = mv − 成本基（−1564.35）", str(tot["real_upnl"]) == "-1564.35", str(tot))
     check("模拟仓沿用账载市值（5214.00）", str(tot["sim_mv"]) == "5214.00", str(tot))
-    check("RECORDED/PROXY 标注存在", "RECORDED" in md)
+    check("真实仓 entry 显示账本每股成本（114.00）", "114.00" in md, md[:200])
+
+
+def test_selection():
+    print("\n[selection] 选股/建仓纪律门 ACT-005/006/007（L-008/L-009/L-010/L-012 codified）")
+    import selection as sel
+    from decimal import Decimal as D
+    # ACT-005 事件封锁（L-010）
+    check("ACT-005 距财报3日 -> 封锁新建", sel.event_timing_gate(3)[0] is False)
+    check("ACT-005 边界=5日 -> 仍封锁", sel.event_timing_gate(5)[0] is False)
+    check("ACT-005 6日 -> 放行", sel.event_timing_gate(6)[0] is True)
+    check("ACT-005 无近端催化 -> 放行", sel.event_timing_gate(None)[0] is True)
+    check("ACT-005 财报已过 -> 放行（事件后）", sel.event_timing_gate(-1)[0] is True)
+    # ACT-006 主题上限（L-009/L-012）
+    check("ACT-006 加仓后13.67%≤25 -> 放行",
+          sel.theme_cap_gate("ai_power", D("5000"), D("100000"), D("8672"))[0] is True)
+    check("ACT-006 加仓后28.67%>25 -> 拒绝",
+          sel.theme_cap_gate("ai_power", D("20000"), D("100000"), D("8672"))[0] is False)
+    check("ACT-006 恰好25% -> 放行（边界）",
+          sel.theme_cap_gate("x", D("25000"), D("100000"), D("0"))[0] is True)
+    check("ACT-006 未登记论题 -> 保守拒绝",
+          sel.theme_cap_gate(None, D("1000"), D("100000"), D("0"))[0] is False)
+    # ACT-007 波动折仓（L-008）
+    check("ACT-007 高 beta 名义仓折半", sel.volatility_scaled_size(D("5"), True) == D("2.5"))
+    check("ACT-007 常规仓位不变", sel.volatility_scaled_size(D("5"), False) == D("5"))
+    # 组合门：BE 式（财报前 + 高 beta + 同主题重仓）必须被拒；ABT 式（事件后、低集中）放行
+    rb = sel.screen_new_position("BE", D("5"), D("100000"), D("20000"), 2, True)
+    check("screen BE 式（财报前高beta同主题）-> 拒绝", rb["allowed"] is False)
+    check("screen 高 beta 仓位已折半 2.5%", rb["sized_pct"] == D("2.5"))
+    ra = sel.screen_new_position("ABT", D("5"), D("100000"), D("0"), None, False)
+    check("screen ABT 式（事件后低集中）-> 放行", ra["allowed"] is True)
 
 
 def main():
@@ -658,7 +690,7 @@ def main():
     for fn in (test_routing, test_schedule_alignment, test_regime, test_slots,
                test_accounting, test_staleness, test_provenance, test_outbox,
                test_report_lint, test_quote_extract, test_knowledge,
-               test_high_availability, test_data_layer):
+               test_high_availability, test_data_layer, test_selection):
         fn()
     print("\n" + "=" * 70)
     print("合计：%d 通过，%d 失败" % (PASS, FAIL))
