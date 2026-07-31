@@ -73,12 +73,15 @@ def validate_accounting(wallet: Dict[str, object], positions: Sequence[Dict[str,
         abs(recomputed - stored_mv) <= TOLERANCE, stored_mv, recomputed,
         "有检出力：存储市值被篡改或漏更新即失败"))
 
-    # C2 现金溯源：现金必须能由初始资金减去全部成本基础复原
-    derived_cash = init - sum(D(p["cost_basis"]) for p in positions) if positions else init
+    # C2 现金溯源：现金 = 初始资金 − 全部持仓成本基础 + 累计已实现盈亏。
+    # 卖出兑现的盈/亏落入现金，故须加 realized；realized=0 时与旧式完全等价（向后兼容，
+    # 全部历史账目与既有 selftest 不受影响）。仍能抓幽灵交易/漏记成本/手改现金，
+    # 且新增：卖出后现金若与「成本回收 + 已实现盈亏」不符即失败。
+    derived_cash = (init - sum(D(p["cost_basis"]) for p in positions) + realized) if positions else (init + realized)
     res.append(CheckResult(
-        "C2 现金溯源 initial - sum(cost_basis) vs 存储现金",
+        "C2 现金溯源 initial - sum(cost_basis) + realized vs 存储现金",
         abs(derived_cash - cash) <= TOLERANCE, cash, derived_cash,
-        "有检出力：幽灵交易、漏记成本、现金被手改均会失败"))
+        "有检出力：幽灵交易、漏记成本、现金被手改、卖出兑现记错均会失败"))
 
     # C3 盈亏分解
     sum_unreal = sum(D(p["unrealized_pnl"]) for p in positions) if positions else Decimal(0)
@@ -111,6 +114,34 @@ def validate_accounting(wallet: Dict[str, object], positions: Sequence[Dict[str,
         "C6 累计盈亏 == 已实现 + 未实现",
         abs((realized + stored_unreal) - stored_cum) <= TOLERANCE, stored_cum, realized + stored_unreal,
         "有检出力：已实现/未实现拆分错误会失败"))
+    return res
+
+
+POSITION_STANDARD_USD = Decimal("10000")   # 用户 2026-07-31：每标的初始一律 $10,000
+SIZE_EXCEPTION_TAG = "SIZE_EXCEPTION"      # 账本 thesis 列带此标记 = 显式豁免（如部分止盈后）
+
+
+def sizing_uniformity(positions: Sequence[Dict[str, object]],
+                      standard: Decimal = POSITION_STANDARD_USD) -> List[CheckResult]:
+    """
+    C7 仓位标准统一性（2026-07-31 新增，防「一部 $5k 一部 $10k」类漂移复发）：
+    每个 OPEN 持仓的 cost_basis 必须等于统一标准（±TOLERANCE），
+    除非该仓在账本 thesis 里带显式 SIZE_EXCEPTION 标记（例如部分止盈后的合法半仓）。
+    背景：$10k 均衡计划落地时 ABT 被自行保留半仓——个人判断不得静默覆盖用户口径，
+    偏离必须显式、必须响亮。
+    """
+    res = []
+    for p in positions:
+        sym = p["symbol"]
+        if SIZE_EXCEPTION_TAG in str(p.get("thesis", "")):
+            res.append(CheckResult("C7 %s 仓位标准（显式豁免 %s）" % (sym, SIZE_EXCEPTION_TAG),
+                                   True, detail="带豁免标记，跳过", severity="WARN"))
+            continue
+        cb = D(p["cost_basis"])
+        res.append(CheckResult(
+            "C7 %s 仓位标准 == $%s" % (sym, standard),
+            abs(cb - standard) <= TOLERANCE, standard, cb,
+            "每标的统一 $10k（用户 2026-07-31）；偏离须带 %s 标记" % SIZE_EXCEPTION_TAG))
     return res
 
 

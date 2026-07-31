@@ -19,6 +19,8 @@ THEME_TAGS: Dict[str, str] = {
     "KTOS": "defense", "MP": "rare_earth", "RMBS": "ai_memory", "ABT": "healthcare",
 }
 
+BASE_INITIAL_PCT = Decimal("10")   # ACT-004：单只新仓初始 = NAV 的 10%（= $10,000 @ $100k），
+                                   # 比例制（随 NAV 缩放）、更均衡（用户 2026-07-31）。高 beta 经 ACT-007 折半。
 THEME_CAP_PCT = Decimal("25")      # ACT-006：同论题合并敞口上限（占 NAV）
 EVENT_BLACKOUT_SESSIONS = 5        # ACT-005：二元催化前禁新建的交易日数
 HIGH_BETA_SIZE_FACTOR = Decimal("0.5")  # ACT-007：高 beta 名义仓位折半

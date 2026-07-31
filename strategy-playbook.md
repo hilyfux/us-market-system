@@ -1,7 +1,7 @@
 # Strategy Playbook
 
-VERSION: 2.1.0
-last_updated: 2026-07-30
+VERSION: 2.1.1
+last_updated: 2026-07-31
 
 ## CORE
 
@@ -47,7 +47,7 @@ last_updated: 2026-07-30
 
 - Environment: non-stress regime
 - Trigger: score >=75, verified prior close, qualified trend, 3-day rise <=8%, explicit invalidation, calculable planned risk
-- Action impact: initial position normally 5%; single-name <=20%; industry <=35%; planned trade risk <=1% of total assets
+- Action impact: initial position normally **10% of NAV (= $10,000 at $100k initial; proportional/balanced, user 2026-07-31)**; single-name <=20%; industry <=35%; planned trade risk <=1% of total assets. Anchored in code: `selection.BASE_INITIAL_PCT` (selftest-locked). High-beta names are halved by ACT-007 before this.
 - Sample count: system control rule
 - Validation metric: every new trade satisfies all gates
 - Enabled: 2026-07-16
@@ -79,7 +79,7 @@ last_updated: 2026-07-30
 
 - Environment: new-position scan
 - Trigger: candidate is high-beta/high-volatility
-- Action impact: halve the nominal starting size (base 5% → 2.5%) before applying ACT-004/ACT-006
+- Action impact: halve the nominal starting size (base 10% → 5%, i.e. $10,000 → $5,000 at $100k) before applying ACT-004/ACT-006
 - Sample count: promoted from L-008 (equal-weight sizing across high-vol names turned one week's tape into the entire cost basis)
 - Validation metric: every high-beta new entry is sized at ≤ half the base
 - Enabled: 2026-07-30
@@ -94,7 +94,7 @@ last_updated: 2026-07-30
   - Environment: crowded/high-expectation theme
   - Trigger: a name reports an earnings beat with raised guidance, yet the next official close fully retraces the event-driven gain (AH pop given back) alongside broad sell-side PT cuts
   - Proposed action impact: treat as an over-crowding/over-expectation signal — reduce willingness to chase that theme; do NOT force an exit (thesis intact) but avoid adds
-  - Sample count: 2 mixed (1 support, 1 counter) — BE 2026-07-29 set the sell-the-news close; BE 2026-07-30 (+26.5% on Mizuho upgrade to Outperform, just 1 session later) is a **counter-sample** (sharp mean-reversion, not continued underperformance). Net evidence inconclusive; still needs >=3 independent trading days or 5 samples before promotion. Do NOT reject on the single counter-day (no single-day overfit).
+  - Sample count: 2 mixed (1 support, 1 counter) — BE 2026-07-29 set the sell-the-news close; BE 2026-07-30 (+26.5% on Mizuho upgrade to Outperform, just 1 session later) is a **counter-sample** (sharp mean-reversion, not continued underperformance). Net evidence inconclusive; still needs >=3 independent trading days or 5 samples before promotion. Do NOT reject on the single counter-day (no single-day overfit). Tracking (window 7/29 + 3-5 sessions, through ~8/5): 7/31 BE -0.63% while theme peers rose (GEV +0.85%, PWR +1.43%, ETN +7.32%) = weak supporting observation for the underperformance metric; still inconclusive.
   - Validation metric: names showing this pattern subsequently underperform their theme peers over the next 3–5 sessions
   - Enabled: no (HYPOTHESIS only)
   - Source lesson: lessons.md#L-011
@@ -107,5 +107,6 @@ None recorded.
 
 ## Change log
 
+- 2.1.1 (2026-07-31) — **Initial position sizing restored to the balanced $10,000 plan.** ACT-004 base initial changed from 5% → **10% of NAV (= $10,000 at $100k, proportional so it scales with equity)** per user; high-beta halved to 5%/$5,000 via ACT-007. Anchored in `selection.BASE_INITIAL_PCT` and selftest-locked. Applies to **new entries only** — existing positions were opened under mixed conventions (3 sim @ $5k, ABT $2.5k post-trim, 5 migrated @ ~$8.5–9.9k) and are NOT force-rebalanced (equal-weighting to $10k each would need ~$80k invested = 82% ratio, far above the DEFENSIVE 50% ceiling, and would add to losers / undo the ABT take-profit).
 - 2.1.0 (2026-07-30) — **First selection-strategy iteration promoted from daily reviews.** Codified three enforced entry gates from L-008/L-009/L-010/L-012: ACT-005 event-timing (no initiation ≤5 sessions before earnings; wait for the confirming close), ACT-006 thesis-concentration cap (same-theme exposure ≤25% NAV at entry), ACT-007 volatility-scaled sizing (half-size high-beta). Backed by `lib/selection.py` (deterministic) and selftest (13 new locking assertions). Rationale: the only clearly profitable name (ABT) was the one entered *after* earnings confirmation; the deep drawdowns came from pre-earnings entries stacked into one 45%-concentrated theme. HYP-001 (sell-the-news) intentionally NOT promoted — only 1 sample, below the ≥3-day/5-sample bar.
 - 2.0.0 — Consolidated action vocabulary, data gating, real/sim separation, accounting order, and strategy promotion requirements across morning, intraday and post-close tasks.

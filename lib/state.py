@@ -64,6 +64,11 @@ def load_positions(root: str) -> List[Dict[str, object]]:
     out = []
     section = None
     for line in t.splitlines():
+        # 2026-07-31 统一账本：单一「## OPEN positions」段（全部为同一模拟盘，宽表 schema）。
+        # 旧的 real/simulated 双段头保留兼容解析（历史文件/测试），新文件不再使用。
+        if line.startswith("## OPEN positions"):
+            section = "sim"
+            continue
         if line.startswith("## OPEN real positions"):
             section = "real"
             continue
@@ -89,7 +94,8 @@ def load_positions(root: str) -> List[Dict[str, object]]:
             out.append({"symbol": cells[0], "status": cells[1], "kind": "sim",
                         "quantity": _num(cells[4]), "cost_basis": _num(cells[5]),
                         "last_close": _num(cells[6]), "close_date": cells[7],
-                        "market_value": _num(cells[8]), "unrealized_pnl": _num(cells[9])})
+                        "market_value": _num(cells[8]), "unrealized_pnl": _num(cells[9]),
+                        "thesis": cells[11] if len(cells) > 11 else ""})
     if not out:
         raise ValueError("portfolio-ledger.md 未解析到任何 OPEN 持仓（格式可能已变）")
     return out

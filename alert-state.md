@@ -1,7 +1,7 @@
 # Alert State
 
 schema_version: 2.0
-last_reconciled_at: 2026-07-30T21:02:38+08:00
+last_reconciled_at: 2026-08-01T04:40:00+08:00
 
 ## Rules
 
@@ -39,12 +39,18 @@ last_reconciled_at: 2026-07-30T21:02:38+08:00
 | PREMARKET+2026-07-30 | 2026-07-30T20:34:45+08:00 | enterprise_wechat | errcode=0 |
 | INTRADAY+2026-07-30+1000 | 2026-07-30T22:05:05+08:00 | enterprise_wechat | errcode=0 |
 | INTRADAY+2026-07-30+1530 | 2026-07-30T15:35:00-04:00 | enterprise_wechat | errcode=0 |
+| POSTCLOSE+2026-07-30 | 2026-07-31T04:43:30+08:00 | enterprise_wechat | errcode=0 |
+| MORNING+2026-07-30 | 2026-07-31T08:54:23+08:00 | enterprise_wechat | errcode=0 |
+| PREMARKET+2026-07-31 | 2026-07-31T20:36:45+08:00 | enterprise_wechat | errcode=0 |
+| INTRADAY+2026-07-31+1000 | 2026-07-31T22:05:03+08:00 | enterprise_wechat | errcode=0 |
 
 ## Pending close signals
 
+- ETN Q2 (7/31 pre-open) — **CLEARED (fundamentals + price, 2026-07-31 POST_CLOSE): thesis strengthened.** Record Q2: adj EPS $3.15 vs $3.08 cons (beat), revenue $8.53B vs $8.16B (+21% sales), organic-growth & EPS guidance RAISED, Mobility/Dana spin-off on track. Official close 415.20 +7.32% (2-source stockanalysis at-close + Google Finance, 0.00%); position flipped to profit (+3.6% vs cost 400.69). Strong close, no exhaustion → ACT-003 not triggered, held (no trim). "Hold into earnings" (L-002) positive sample #3.
+- 2026-07-31 settlement — **VERIFIED same night** (first same-night VERIFIED settlement since 7/16): 8/8 closes 2-source 0.00% at T+~45min (quote pages carried settled "At close Jul 31" stamps); valuation_date advanced to 2026-07-31; wallet 98,160.72; C1–C7 diff=0; W1 lag=0. No trades.
 - RMBS RED_PENDING_CLOSE (Q2 7/27) — **CLEARED 2026-07-28**: EPS beat verified, position held.
 - BE Q2 (7/28 after close) — **CLEARED** (fundamentals). 7/29 price-confirmation **DONE (2026-07-30 morning backfill)**: verified close 163.75 (−1.85%, intraday 185.66→157.33) — the +12.7% AH pop fully retraced, broad PT cuts (Jefferies/BMO/Truist to Hold). Thesis intact (record quarter), no verified impairment → held (advisory); no stop triggered. Sell-the-news divergence confirmed (lessons L-011 / HYP-001).
-- ABT take-profit 104.76 — **REVERSAL SIGNAL TRIGGERED 2026-07-30 (pending 2-source verify).** Observed 7/30 close 105.54 (−2.28%) is BELOW the prior-day (7/29) low 106.97 and was the only red name on a broad risk-on rebound day (SPY +1.68%) = the first official-close exhaustion/reversal after two closes above 104.76 → the pre-registered ACT-003 trigger ("收盘跌破前日低点") is MET. Still above 104.76 (+6.8% vs cost). **止盈-减仓50% AUTHORIZED but NOT executed** tonight: single approved source only (AV quota exhausted) → data gate ACT-001 blocks. Execute at 2026-07-31 MORNING once the 7/30 close is verified by ≥2 independent sources. → YELLOW_PENDING_CLOSE.
-- PWR Q2 (2026-07-30 pre-open) — **CLEARED (fundamentals), thesis strengthened.** adj EPS $4.24 vs $3.31 consensus (big BEAT); FY26 adj EPS guide raised to $16.45-16.95 from $13.55-14.25; observed +16.8% to ~655.37 (above cost proxy 631.02, flipped to profit). "Hold into earnings" (L-002) paid off. No exhaustion → hold, no trim. Price VERIFIED pending 7/31 backfill.
-- 2026-07-30 settlement — **GAP (open)**: POST_CLOSE at T+31min, AV exhausted + stockanalysis table-vs-realtime divergence on big movers → P1 (≥2 sources) unmet. valuation_date held at 2026-07-29. Backfill + ABT take-profit execution at 2026-07-31 MORNING (see data/post-close.md).
+- ABT take-profit 104.76 — **EXECUTED 2026-07-31 MORNING (止盈-减仓50%).** 7/30 official close 105.61 (2-source: stockanalysis history + Google Finance, 0.00%, OHLC-exact) fell BELOW the prior-day (7/29) low 106.97 — the pre-registered ACT-003 close-confirmed exhaustion/reversal after two closes above 104.76, ABT the lone red name on a broad risk-on day. Trade 2026-07-30-ABT-止盈减仓50-01: sold 25.29595 sh @105.61, realized **+171.51**. Remaining 25.29595 sh held (+6.86% vs cost). **SIGNAL CLEARED.**
+- PWR Q2 (2026-07-30 pre-open) — **CLEARED (fundamentals), thesis strengthened.** adj EPS $4.24 vs $3.31 (big BEAT); FY26 adj EPS guide raised to $16.45-16.95 from $13.55-14.25; +17.26% to 657.98 (above cost proxy 631.02, flipped to profit +404.60). "Hold into earnings" (L-002) paid off. No exhaustion → hold, no trim. **Price VERIFIED 2026-07-31 (657.98, 2-source stockanalysis + stockscan).**
+- 2026-07-30 settlement — **CLOSED → VERIFIED (2026-07-31 MORNING backfill)**: 8/8 closes settled by ≥2 independent sources; valuation_date advanced to 2026-07-30; wallet 97,127.42; C1–C6 diff=0; W1 lag=0. ABT take-profit executed (see above). Google Finance classic endpoint returned Dec stale cache for BE/RMBS (avoided; used stockscan.io instead) — logged as method lesson.
 - 2026-07-29 settlement — **CLOSED → VERIFIED (2026-07-30 morning backfill)**: 8/8 closes settled; wallet names GEV 900.28 / ETN 361.88 / ABT 108.00 confirmed by 2 fresh independent sources (stockanalysis history + Google Finance) at 0.00% incl. OHLC. valuation_date advanced to 2026-07-29; wallet 99,135.95; C1–C6 diff=0; W1 lag=0.

@@ -67,6 +67,8 @@ def run(now=None):
         add(ig.staleness_check(s["wallet"]["valuation_date"], r["et"].date(), CAL))
         for res in ig.validate_accounting(s["wallet"], s["sim_positions"]):
             add(res)
+        for res in ig.sizing_uniformity(s["sim_positions"]):
+            add(res)
         slots = mc.slot_report(s["positions"])
         report["slots"] = slots
         report["regime_inputs_present"] = bool(s.get("benchmarks"))

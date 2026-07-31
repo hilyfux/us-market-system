@@ -1,0 +1,19 @@
+{"type":"meta","schema":"decision-log v1","note":"统一模拟盘的决策/成交/权益累积数据集。append-only；每条一 JSON。type: trade|equity|decision。回测由 tools/backtest.py + lib/backtest.py 消费。权益序列仅取「统一模拟盘」口径(2026-07-29 pro-forma 起)以保证可比。"}
+{"type":"equity","date":"2026-07-29","book":"unified","total_assets":91590.145756,"benchmark_spy":729.46,"note":"统一模拟盘 pro-forma(迁移当日按成本并入)"}
+{"type":"equity","date":"2026-07-30","book":"unified","total_assets":97127.423907,"benchmark_spy":741.69,"note":"风险 on 反弹日；PWR Q2大超、BE +26.5%(Mizuho升级)"}
+{"type":"trade","date":"2026-07-30","symbol":"ABT","action":"止盈-减仓50%","trade_id":"2026-07-30-ABT-止盈减仓50-01","entry_price":98.83,"exit_price":105.61,"qty":25.29595,"realized":171.51,"rule":"ACT-003","rationale":"两连收站上 104.76 止盈位后，7/30 收 105.61 跌破前日低 106.97=收盘衰竭/反转确认；风险 on 日唯一收红(派发)。","entry_type":"event_confirmed"}
+{"type":"decision","date":"2026-07-17","symbol":"ABT","action":"建仓","rule":"L-010","entry_type":"event_confirmed","rationale":"Q2(7/16)超预期+上调后入场(事件确认后)","outcome":"唯一显著盈利仓；7/30 减半止盈实现 +171.51"}
+{"type":"decision","date":"2026-07-08","symbol":"PWR","action":"建仓","rule":null,"entry_type":"pre_event_or_migrated","rationale":"AI-电力基建论点；财报前迁移仓","outcome":"7/30 Q2大超 +17.26%，转正 +404.60(未实现)"}
+{"type":"decision","date":"2026-07-10","symbol":"BE","action":"建仓","rule":null,"entry_type":"pre_event","rationale":"财报风险入场(L-010 反面)","outcome":"7/29 卖事实回吐(L-011)→7/30 +26.5% 均值回归(HYP-001 反样本)"}
+{"type":"decision","date":"2026-07-10","symbol":"KTOS","action":"持有","rule":"L-005","entry_type":"pre_event","rationale":"深跌但无公司破坏，规则不触发退出","outcome":"7/30 反弹，仍 -1.68%(未实现)"}
+{"type":"decision","date":"2026-07-08","symbol":"MP","action":"持有","rule":"L-005","entry_type":"pre_event","rationale":"行业超供情绪、无公司减值","outcome":"仍 -8.36%(未实现)，Q2 8/6 待验证"}
+{"type":"decision","date":"2026-07","symbol":"RMBS","action":"持有","rule":"L-002","entry_type":"pre_event","rationale":"Q2 超预期但 Q3 指引软；财报前不动","outcome":"仍 -21.39%(未实现)，全组合最弱"}
+{"type":"entry","date":"2026-07-31","symbol":"GEV","action":"加仓","trade_id":"2026-07-31-GEV-均衡加仓-01","price":981.98,"buy_usd":5000.00,"shares":5.091757,"rule":"用户均衡指令","note":"至 $10k 成本基"}
+{"type":"entry","date":"2026-07-31","symbol":"ETN","action":"加仓","trade_id":"2026-07-31-ETN-均衡加仓-01","price":386.89,"buy_usd":5000.01,"shares":12.923586,"rule":"用户均衡指令","note":"至 $10k 成本基"}
+{"type":"entry","date":"2026-07-31","symbol":"PWR","action":"加仓","trade_id":"2026-07-31-PWR-均衡加仓-01","price":657.98,"buy_usd":529.90,"shares":0.805350,"rule":"用户均衡指令","note":"至 $10k 成本基"}
+{"type":"entry","date":"2026-07-31","symbol":"MP","action":"加仓","trade_id":"2026-07-31-MP-均衡加仓-01","price":41.66,"buy_usd":1422.64,"shares":34.148909,"rule":"用户均衡指令","note":"至 $10k 成本基（加仓含损仓，已授权越 50% 上限）"}
+{"type":"entry","date":"2026-07-31","symbol":"BE","action":"加仓","trade_id":"2026-07-31-BE-均衡加仓-01","price":207.12,"buy_usd":1548.59,"shares":7.476768,"rule":"用户均衡指令","note":"至 $10k 成本基"}
+{"type":"entry","date":"2026-07-31","symbol":"KTOS","action":"加仓","trade_id":"2026-07-31-KTOS-均衡加仓-01","price":46.17,"buy_usd":255.24,"shares":5.528291,"rule":"用户均衡指令","note":"至 $10k 成本基"}
+{"type":"entry","date":"2026-07-31","symbol":"RMBS","action":"加仓","trade_id":"2026-07-31-RMBS-均衡加仓-01","price":89.62,"buy_usd":86.96,"shares":0.970308,"rule":"用户均衡指令","note":"至 $10k 成本基"}
+{"type":"decision","date":"2026-07-31","symbol":"ABT","action":"持有(不加仓)","rule":"ACT-003","entry_type":"event_confirmed","rationale":"7/30 已利确减半 @105.61；同价再买回仅是无意义churn，保留半仓","outcome":"维持 $2.5k 成本基"}
+{"type":"entry","date":"2026-07-31","symbol":"ABT","action":"加仓","trade_id":"2026-07-31-ABT-均衡加仓-01","price":105.61,"buy_usd":7500.00,"shares":71.016014,"rule":"用户均衡指令","note":"更正：用户口径「所有标的一律 $10k」覆盖此前『保留半仓』的个人判断；至 $10k 成本基"}

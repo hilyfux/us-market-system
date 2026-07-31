@@ -203,6 +203,24 @@ def test_accounting():
     s4 = ig.summarize(ig.validate_accounting(wallet, ghost))
     check("凭空多出一个仓位必须被抓到", not s4["ok"])
 
+    # 已实现盈亏（部分止盈卖出）后账目仍须自洽：现金 = 初始 − Σ成本基础 + 已实现。
+    # 场景：买 100@10（成本基础 1000），卖 40@15（收益 200），余 60@10、现价 12。
+    # cash = 100000 − 1000 + 40×15 = 99600；余仓成本基础 600、市值 720、未实现 120。
+    rz_positions = [{"symbol": "XYZ", "quantity": "60", "last_close": "12",
+                     "cost_basis": "600", "market_value": "720", "unrealized_pnl": "120"}]
+    rz_wallet = {"cash": "99600", "total_market_value": "720", "total_assets": "100320",
+                 "cumulative_pnl": "320", "realized_pnl": "200", "unrealized_pnl": "120"}
+    sr = ig.summarize(ig.validate_accounting(rz_wallet, rz_positions))
+    check("含已实现盈亏的账目应全部通过（realized-aware C2/C6）", sr["ok"], str(sr["failures"]))
+
+    # 漏记已实现盈亏（realized 归零但现金仍含收益）必须被 C2+C6 抓到
+    rz_bad = dict(rz_wallet, realized_pnl="0")
+    srb = ig.summarize(ig.validate_accounting(rz_bad, rz_positions))
+    check("漏记已实现盈亏必须被抓到（realized 与现金/累计不符）", not srb["ok"])
+
+    # realized=0 时新式与旧式等价：原始账目（realized=0）依然通过，保证向后兼容
+    check("realized=0 时账目仍通过（向后兼容）", s["ok"])
+
 
 def test_staleness():
     print("\n== 陈旧度看门狗 ==")
@@ -633,24 +651,59 @@ def test_data_layer():
     else:
         check("data/sources.md 存在", False, doc_p)
 
-    # 5) 持仓归一化视图：纯函数正确性（含真实仓市值/盈亏计算）
+    # 5) 持仓归一化视图：纯函数正确性（单一账户口径，2026-07-31）
     import refresh_data as rd
     fixture = [
-        {"symbol": "RMBS", "kind": "real", "status": "OPEN", "quantity": "86.9565",
-         "cost": "114.00", "last_close": "96.01", "close_date": "2026-07-24"},
-        {"symbol": "ABT", "kind": "sim", "status": "OPEN", "quantity": "50.5919",
-         "cost_basis": "4999.997477", "last_close": "103.06", "close_date": "2026-07-24",
-         "market_value": "5214.001214", "unrealized_pnl": "214.003737"},
+        {"symbol": "RMBS", "kind": "sim", "status": "OPEN", "quantity": "87.926808",
+         "cost_basis": "10000.000000", "last_close": "89.62", "close_date": "2026-07-30",
+         "market_value": "7880.000533", "unrealized_pnl": "-2119.999467"},
+        {"symbol": "ABT", "kind": "sim", "status": "OPEN", "quantity": "96.311964",
+         "cost_basis": "10000.000000", "last_close": "105.61", "close_date": "2026-07-30",
+         "market_value": "10171.506518", "unrealized_pnl": "171.506518"},
     ]
     md, tot = rd.build_positions_table(fixture, {})
     check("视图含统一表头与全部行",
           md.count("\n|---") == 1 and "RMBS" in md and "ABT" in md, md[:120])
-    check("真实仓市值按 qty×close 计算（8348.69）", str(tot["real_mv"]) == "8348.69", str(tot))
-    # 成本自账本 cost 列派生（cost×qty），非硬编码 10000：114×86.9565=9913.04 证明去硬编码
-    check("真实仓成本基 = 账本 cost×qty（9913.04）", str(tot["real_cost"]) == "9913.04", str(tot))
-    check("真实仓盈亏 = mv − 成本基（−1564.35）", str(tot["real_upnl"]) == "-1564.35", str(tot))
-    check("模拟仓沿用账载市值（5214.00）", str(tot["sim_mv"]) == "5214.00", str(tot))
-    check("真实仓 entry 显示账本每股成本（114.00）", "114.00" in md, md[:200])
+    check("组合市值合计（18051.51）", str(tot["mv"]) == "18051.51", str(tot))
+    check("组合未实现合计（-1948.49）", str(tot["upnl"]) == "-1948.49", str(tot))
+    check("avg_cost = cost_basis/qty（RMBS 113.73）", "113.73" in md, md[:250])
+    # 6) 单一账户纯度守卫（2026-07-31，防 real/sim 区分在生成视图/账本回潮）
+    for tok in ("real", "真实", "建议未执行", "kind"):
+        check("视图纯度：不含 %r" % tok, tok not in md)
+    ledger_p = os.path.join(HERE_DIR, "..", "portfolio-ledger.md")
+    with open(ledger_p, encoding="utf-8") as f:
+        ledger_txt = f.read()
+    check("账本无「OPEN real positions」段", "## OPEN real positions" not in ledger_txt)
+    check("账本为单一「OPEN positions」段", "## OPEN positions" in ledger_txt)
+    pos_view_p = os.path.join(HERE_DIR, "..", "data", "positions.md")
+    if os.path.exists(pos_view_p):
+        with open(pos_view_p, encoding="utf-8") as f:
+            pv = f.read()
+        for tok in ("真实盘", "模拟盘小计", "建议未执行", "| kind |"):
+            check("positions.md 纯度：不含 %r" % tok, tok not in pv)
+    # 7) C7 仓位标准统一性（防「一部 $5k 一部 $10k」复发；个人判断不得静默覆盖用户口径）
+    ok_pos = [{"symbol": "A", "cost_basis": "10000.000000", "thesis": "x"}]
+    bad_pos = [{"symbol": "B", "cost_basis": "5000.00", "thesis": "y"}]
+    ex_pos = [{"symbol": "C", "cost_basis": "2500.00", "thesis": "止盈后半仓 SIZE_EXCEPTION(take-profit)"}]
+    check("C7 标准 $10k 通过", all(r.passed for r in ig.sizing_uniformity(ok_pos)))
+    check("C7 偏离 $5k 必须失败", not all(r.passed for r in ig.sizing_uniformity(bad_pos)))
+    check("C7 显式 SIZE_EXCEPTION 豁免通过", all(r.passed for r in ig.sizing_uniformity(ex_pos)))
+    # 8) 账本统一段头解析（state.load_positions 认「## OPEN positions」）
+    import tempfile as _tf
+    import state as _st
+    with _tf.TemporaryDirectory() as td:
+        with open(os.path.join(td, "portfolio-ledger.md"), "w", encoding="utf-8") as f:
+            f.write("# L\n\n## OPEN positions\n\n"
+                    "| symbol | status | opened_on | cost | quantity | cost_basis | last_close "
+                    "| close_date | market_value | unrealized_pnl | data_status | thesis |\n"
+                    "|---|---|---|---|---|---|---|---|---|---|---|---|\n"
+                    "| ZZZ | OPEN | 2026-01-01 | 10 | 1000 | 10000 | 11 | 2026-01-02 "
+                    "| 11000 | 1000 | VERIFIED | t |\n")
+        parsed = _st.load_positions(td)
+        check("统一段头解析出 1 仓且 kind=sim",
+              len(parsed) == 1 and parsed[0]["kind"] == "sim" and parsed[0]["symbol"] == "ZZZ",
+              str(parsed))
+        check("统一段头解析带 thesis 列", parsed[0].get("thesis") == "t", str(parsed))
 
 
 def test_selection():
@@ -672,15 +725,55 @@ def test_selection():
           sel.theme_cap_gate("x", D("25000"), D("100000"), D("0"))[0] is True)
     check("ACT-006 未登记论题 -> 保守拒绝",
           sel.theme_cap_gate(None, D("1000"), D("100000"), D("0"))[0] is False)
-    # ACT-007 波动折仓（L-008）
-    check("ACT-007 高 beta 名义仓折半", sel.volatility_scaled_size(D("5"), True) == D("2.5"))
-    check("ACT-007 常规仓位不变", sel.volatility_scaled_size(D("5"), False) == D("5"))
+    # ACT-004 基础仓位 = NAV 10%（=$10,000 @ $100k，比例制，用户 2026-07-31）
+    check("ACT-004 基础初始仓 == 10% NAV", sel.BASE_INITIAL_PCT == D("10"))
+    # ACT-007 波动折仓（L-008）：base 10% -> 高 beta 5%
+    check("ACT-007 高 beta 名义仓折半（10%->5%）",
+          sel.volatility_scaled_size(sel.BASE_INITIAL_PCT, True) == D("5"))
+    check("ACT-007 常规仓位不变（10%）",
+          sel.volatility_scaled_size(sel.BASE_INITIAL_PCT, False) == D("10"))
     # 组合门：BE 式（财报前 + 高 beta + 同主题重仓）必须被拒；ABT 式（事件后、低集中）放行
-    rb = sel.screen_new_position("BE", D("5"), D("100000"), D("20000"), 2, True)
+    rb = sel.screen_new_position("BE", sel.BASE_INITIAL_PCT, D("100000"), D("20000"), 2, True)
     check("screen BE 式（财报前高beta同主题）-> 拒绝", rb["allowed"] is False)
-    check("screen 高 beta 仓位已折半 2.5%", rb["sized_pct"] == D("2.5"))
-    ra = sel.screen_new_position("ABT", D("5"), D("100000"), D("0"), None, False)
-    check("screen ABT 式（事件后低集中）-> 放行", ra["allowed"] is True)
+    check("screen 高 beta 仓位已折半 5%（$5k @ $100k）", rb["sized_pct"] == D("5"))
+    ra = sel.screen_new_position("ABT", sel.BASE_INITIAL_PCT, D("100000"), D("0"), None, False)
+    check("screen ABT 式（事件后低集中，10% $10k）-> 放行", ra["allowed"] is True)
+    check("screen 常规仓位 == 10%（$10,000 @ $100k）", ra["sized_pct"] == D("10"))
+
+
+def test_backtest():
+    print("\n[backtest] 回测/绩效引擎（合成数据锁定，样本充分性守卫）")
+    import backtest as bt
+    from decimal import Decimal as D
+    # 收益 & 回撤
+    check("total_return [100,120]==20.00", bt.total_return([100, 120]) == D("20.00"))
+    check("total_return 单点==0", bt.total_return([100]) == D("0"))
+    check("max_drawdown [100,110,105,120]==4.55",
+          bt.max_drawdown([100, 110, 105, 120]) == D("4.55"),
+          str(bt.max_drawdown([100, 110, 105, 120])))
+    check("max_drawdown [100,90,95]==10.00", bt.max_drawdown([100, 90, 95]) == D("10.00"))
+    # 成交统计
+    ts = bt.trade_stats([{"realized": "171.51"}, {"realized": "-50"}, {"realized": "100"}])
+    check("trade n==3", ts["n"] == 3, str(ts))
+    check("win_rate==66.67", ts["win_rate"] == D("66.67"), str(ts))
+    check("profit_factor==5.43", ts["profit_factor"] == D("5.43"), str(ts))
+    check("net_realized==221.51", ts["net_realized"] == D("221.51"), str(ts))
+    check("expectancy==73.84", ts["expectancy"] == D("73.84"), str(ts))
+    check("无亏损时 profit_factor 为 Infinity",
+          bt.trade_stats([{"realized": "10"}])["profit_factor"] == D("Infinity"))
+    check("空成交 win_rate==0", bt.trade_stats([])["win_rate"] == D("0"))
+    # 对基准
+    rb = bt.benchmark_relative([100, 106], [100, 105])
+    check("超额==1.00pp", rb["excess_pp"] == D("1.00"), str(rb))
+    # 样本充分性守卫（n=1 必须判不足）
+    check("样本不足守卫：1 笔成交 -> sufficient False",
+          bt.sample_sufficiency(1, 2)["sufficient"] is False)
+    check("样本充分：25 笔 + 25 点 -> sufficient True",
+          bt.sample_sufficiency(25, 25)["sufficient"] is True)
+    # run 汇总不抛且键齐全
+    r = bt.run([100, 97], [{"realized": "171.51"}], benchmark=[100, 101])
+    check("run 汇总键齐全",
+          set(["total_return_pct", "max_drawdown_pct", "trades", "sample", "vs_benchmark"]) <= set(r), str(r.keys()))
 
 
 def main():
@@ -690,7 +783,8 @@ def main():
     for fn in (test_routing, test_schedule_alignment, test_regime, test_slots,
                test_accounting, test_staleness, test_provenance, test_outbox,
                test_report_lint, test_quote_extract, test_knowledge,
-               test_high_availability, test_data_layer, test_selection):
+               test_high_availability, test_data_layer, test_selection,
+               test_backtest):
         fn()
     print("\n" + "=" * 70)
     print("合计：%d 通过，%d 失败" % (PASS, FAIL))
