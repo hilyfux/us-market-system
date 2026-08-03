@@ -16,6 +16,9 @@ report_lint — 把 SYSTEM.md §5「可读性与无歧义」标准里**机器可
   L5 （已撤销，2026-07-27）原“须注明数据时间来源”。用户裁定推送是交易便签，
                      溯源与数据质量属内部事务；验证照做，但不进正文。
   L6 内部事务泄漏    来源域名/降级术语/升级项出现在推送正文即违规（问题内部修，不推给用户）。
+  L7 账务透明        （2026-07-31 用户裁定）正文必须含账户行（「总资产」+当日盈亏）；
+                     每条持仓行（^TICKER ·|｜ 开头且含 §4 动作词）必须含「成本」、
+                     当日字段（今日/当日/昨日）与「累计」百分比。推送没有账目=用户看不见钱。
 
 纯语义类要求（自相矛盾、可两解、省略前提）无法在不做真正语言理解的前提下稳定判定，
 **刻意不在此断言**，仍由报告生成步骤负责——§5 已注明这一分工。
@@ -47,6 +50,9 @@ _NEGATION = ("无", "未", "没有", "不", "非", "no ", "not ", "without", "no
 _CONDITIONAL = ("若", "如果", "一旦", "假设", "检查", "复核",
                 "确认后", "待确认", "触发条件", "if ", "once ", "should ")
 _DATE_RE = re.compile(r"\d{4}-\d{2}-\d{2}|\d{1,2}\s*月\s*\d{1,2}\s*日")
+# L7 持仓行识别：行首为 1-5 位大写代码 + 分隔符（· 或 ｜ 或空格+·）。高精确：
+# emoji 行（🚨/📊）、「成交：」「账户：」等不匹配，不会被误加账务要求。
+_POSITION_LINE_RE = re.compile(r"^[A-Z]{1,5}\s*[·｜]")
 # 内部事务标记（2026-07-27，L6）：这些词属于系统内部（溯源/降级/升级项），
 # 出现在推送正文即违规——用户只要「代码·动作·原因」，问题内部解决。
 _INTERNAL_LEAK_MARKERS = ("stockanalysis.com", "roic.ai", "数据时间", "数据来源",
@@ -125,5 +131,23 @@ def lint_report(markdown: str, stage: str) -> Dict[str, object]:
     for leak in _INTERNAL_LEAK_MARKERS:
         if leak.lower() in markdown.lower():
             v.append("L6 推送正文含内部事务「%s」——问题应内部记录并修复，不是推给用户" % leak)
+
+    # L7 账务透明（2026-07-31 用户裁定：推送必须让用户看见钱）
+    if "总资产" not in markdown:
+        v.append("L7 缺账户行：正文必须含「总资产」（含当日盈亏）——推送没有账目=用户看不见钱")
+    for ln in lines:
+        if not _POSITION_LINE_RE.match(ln.strip()):
+            continue
+        if not _VALID_ACTION_RE.search(ln):
+            continue  # 非动作行（如财报前瞻行）不作账务要求
+        miss = []
+        if "成本" not in ln:
+            miss.append("成本")
+        if not any(k in ln for k in ("今日", "当日", "昨日")):
+            miss.append("今日/当日")
+        if "累计" not in ln or "%" not in ln:
+            miss.append("累计%")
+        if miss:
+            v.append("L7 持仓行缺账务字段 %s：%r" % ("/".join(miss), ln.strip()[:50]))
 
     return {"ok": not v, "violations": v}

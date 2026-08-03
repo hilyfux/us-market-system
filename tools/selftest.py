@@ -401,11 +401,12 @@ def test_outbox():
 def test_report_lint():
     print("\n== 推送可读性/无歧义硬门（§5 机器可验证子集）==")
 
-    # 一份合规的盘中报告（标题+日期、动作合规、建议未执行、数据时间来源、篇幅内）
+    # 一份合规的盘中报告（标题+日期、动作合规、建议未执行、账务字段 L7、篇幅内）
     good = (
         "# 美股盘中报告｜2026-07-27\n"
-        "ABT · 持有 · 未触发止盈条件\n"
-        "MP · 减仓建议未执行 · 相对大盘走弱，需收盘确认\n"
+        "ABT · 持有 · 成本103.83｜今日+1.2%｜累计+1.7% · 未触发止盈条件\n"
+        "MP · 减仓建议未执行 · 成本44.88｜今日-2.0%｜累计-7.2% · 相对大盘走弱，需收盘确认\n"
+        "账户：总资产 97,127（今日 +0.4%｜累计 -2.9%）\n"
     )
     check("合规盘中报告应通过", rl.lint_report(good, "INTRADAY")["ok"],
           str(rl.lint_report(good, "INTRADAY")["violations"]))
@@ -428,14 +429,15 @@ def test_report_lint():
 
     # L4：否定语境不误判（“无减仓/平仓信号”）
     negated = rl.lint_report(
-        "# 盘中｜2026-07-27\n全部持有，无减仓/平仓信号", "INTRADAY")
+        "# 盘中｜2026-07-27\n全部持有，无减仓/平仓信号\n账户：总资产 97,127（今日 +0.4%）", "INTRADAY")
     check("「无减仓/平仓信号」不得误判（L4 否定守卫）", negated["ok"],
           str(negated["violations"]))
 
     # L4（2026-07-27 修复）：条件/检查语境里的前瞻动作词不得误判。
     conditional = rl.lint_report(
-        "# 美股盘前｜2026-07-27\nMP · 持有（建议未执行）· 财报前不动\n"
-        "开盘后检查：若 BE 盘后财报破坏基本面，待正式收盘技术确认后再议减仓", "PREMARKET")
+        "# 美股盘前｜2026-07-27\nMP · 持有（建议未执行）· 成本44.88｜昨日-2.0%｜累计-7.2% · 财报前不动\n"
+        "开盘后检查：若 BE 盘后财报破坏基本面，待正式收盘技术确认后再议减仓\n"
+        "账户：总资产 97,127（昨日 +0.4%｜累计 -2.9%）", "PREMARKET")
     check("条件/检查语境「若…待确认…再议减仓」不得误判（L4 条件守卫）",
           conditional["ok"], str(conditional["violations"]))
 
@@ -446,8 +448,24 @@ def test_report_lint():
           not real_unlabeled["ok"], str(real_unlabeled["violations"]))
 
     # L5 已撤销（2026-07-27 用户裁定）：无来源标注也合格
-    nosrc = rl.lint_report("# 盘中｜2026-07-27\nABT · 持有 · 未触发止盈", "INTRADAY")
+    nosrc = rl.lint_report(
+        "# 盘中｜2026-07-27\nABT · 持有 · 成本103.83｜今日+1.2%｜累计+1.7% · 未触发止盈\n"
+        "账户：总资产 97,127（今日 +0.4%）", "INTRADAY")
     check("无来源/as-of 标注也合格（L5 撤销）", nosrc["ok"], str(nosrc["violations"]))
+
+    # L7（2026-07-31 用户裁定）：账务透明硬门
+    no_acct = rl.lint_report(
+        "# 盘中｜2026-07-27\nABT · 持有 · 成本103.83｜今日+1.2%｜累计+1.7% · ok", "INTRADAY")
+    check("缺「总资产」账户行必须判违规（L7）", not no_acct["ok"])
+    no_cost = rl.lint_report(
+        "# 盘中｜2026-07-27\nABT · 持有 · 未触发止盈\n账户：总资产 97,127（今日 +0.4%）", "INTRADAY")
+    check("持仓行缺成本/今日/累计必须判违规（L7）", not no_cost["ok"])
+    forecast_line = rl.lint_report(
+        "# 盘中｜2026-07-27\nABT · 持有 · 成本103.83｜今日+1.2%｜累计+1.7% · ok\n"
+        "📊 KTOS 财报 8/4：共识 EPS 0.14，若确认订单加速则维持\n"
+        "账户：总资产 97,127（今日 +0.4%）", "INTRADAY")
+    check("📊 财报前瞻行不受 L7 账务要求（非动作行）", forecast_line["ok"],
+          str(forecast_line["violations"]))
 
     # L6：内部事务不得泄漏进推送
     leak1 = rl.lint_report("# 盘中｜2026-07-27\nABT 持有（来源 stockanalysis.com）", "INTRADAY")
@@ -479,7 +497,8 @@ def test_report_lint():
             check("不合格阶段报告必须被 enqueue 拒绝（抛 ReportLintError）", True)
         # 合规报告应能正常入队
         rgood = ob.enqueue("PREMARKET+2026-07-27",
-                           "# 美股盘前｜2026-07-27\n全部持有（建议未执行）",
+                           "# 美股盘前｜2026-07-27\n全部持有（建议未执行）\n"
+                           "账户：总资产 97,127（昨日 +0.4%｜累计 -2.9%）",
                            hook, path=tmp)
         check("合规阶段报告应正常入队", rgood["enqueued"], str(rgood))
     finally:

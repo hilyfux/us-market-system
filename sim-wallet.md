@@ -3,52 +3,54 @@
 schema_version: 2.0
 base_currency: USD
 initial_capital: 100000.000000
-last_reconciled_at: 2026-08-01T04:40:00+08:00
-valuation_date: 2026-07-31
+last_reconciled_at: 2026-08-04T05:05:00+08:00
+valuation_date: 2026-08-03
 valuation_status: VERIFIED
-valuation_source: 2026-07-31 official regular-session closes, settled SAME NIGHT at T+~45min. All 8 names verified by 2 independent settled sources (stockanalysis quote page, "At close: Jul 31, 2026, 4:00 PM EDT" stamp on every page, + Google Finance beta "Closed: Jul 31" stamp) at 0.00% incl. open-price alignment. AV daily quota exhausted intraday (SPY 746.90 obtained from AV before exhaustion; stockanalysis SPY at-close 747.03 used, Δ0.017% consolidated-tape convention). No trades this session.
-prior_valuation_date: 2026-07-30 (superseded)
+valuation_source: 2026-08-03 official regular-session closes, settled SAME NIGHT at T+~60min. All 8 names verified by 2 independent settled sources: stockanalysis quote pages ("At close: Aug 3, 2026, 4:00 PM EDT" stamp on every page) + Google Finance beta "Closed: Aug 3, 4:00 PM GMT-4" stamps, 0.00% on 7 names; ABT second source roic.ai 107.16 (Δ0.04%). Prev-close cross-check vs verified 7/31 closes 0.00% on 8/8. AV free quota exhausted all ET-day (25 req/day), web sources only. No trades this session.
+prior_valuation_date: 2026-07-31 (superseded)
 
 ## Balances
 
 | item | USD |
 |---|---:|
 | cash | 20171.506542 |
-| GEV market value | 9791.449793 |
-| ETN market value | 10362.016027 |
-| ABT market value | 10180.174595 |
-| PWR market value | 10552.930312 |
-| MP market value | 9218.398869 |
-| BE market value | 9952.594556 |
-| KTOS market value | 9927.672901 |
-| RMBS market value | 8003.977332 |
-| total market value | 77989.214385 |
-| total assets | 98160.720927 |
-| cumulative P&L | -1839.279073 |
+| GEV market value | 9954.296209 |
+| ETN market value | 10936.768506 |
+| ABT market value | 10316.937584 |
+| PWR market value | 10755.968590 |
+| MP market value | 9768.784299 |
+| BE market value | 10557.555238 |
+| KTOS market value | 10483.707799 |
+| RMBS market value | 8107.730966 |
+| total market value | 80881.749190 |
+| total assets | 101053.255732 |
+| cumulative P&L | 1053.255732 |
 | realized P&L | 171.506542 |
-| unrealized P&L | -2010.785615 |
-| position ratio | 79.450531% |
+| unrealized P&L | 881.749190 |
+| position ratio | 80.038737% |
 
 ## Position accounting
 
 | symbol | quantity | cost | cost basis | reference close | market value | unrealized P&L |
 |---|---:|---:|---:|---:|---:|---:|
-| GEV | 9.887457 | 1011.38 | 10000.000000 | 990.29 | 9791.449793 | -208.550207 |
-| ETN | 24.956686 | 400.69 | 10000.000000 | 415.20 | 10362.016027 | 362.016027 |
-| ABT | 96.311964 | 103.83 | 10000.000000 | 105.70 | 10180.174595 | 180.174595 |
-| PWR | 15.812950 | 632.39 | 10000.000000 | 667.36 | 10552.930312 | 552.930312 |
-| MP | 222.828109 | 44.88 | 10000.000000 | 41.37 | 9218.398869 | -781.601131 |
-| BE | 48.358168 | 206.79 | 10000.000000 | 205.81 | 9952.594556 | -47.405444 |
-| KTOS | 213.040191 | 46.94 | 10000.000000 | 46.60 | 9927.672901 | -72.327099 |
-| RMBS | 87.926808 | 113.73 | 10000.000000 | 91.03 | 8003.977332 | -1996.022668 |
+| GEV | 9.887457 | 1011.38 | 10000.000000 | 1006.76 | 9954.296209 | -45.703791 |
+| ETN | 24.956686 | 400.69 | 10000.000000 | 438.23 | 10936.768506 | 936.768506 |
+| ABT | 96.311964 | 103.83 | 10000.000000 | 107.12 | 10316.937584 | 316.937584 |
+| PWR | 15.812950 | 632.39 | 10000.000000 | 680.20 | 10755.968590 | 755.968590 |
+| MP | 222.828109 | 44.88 | 10000.000000 | 43.84 | 9768.784299 | -231.215701 |
+| BE | 48.358168 | 206.79 | 10000.000000 | 218.32 | 10557.555238 | 557.555238 |
+| KTOS | 213.040191 | 46.94 | 10000.000000 | 49.21 | 10483.707799 | 483.707799 |
+| RMBS | 87.926808 | 113.73 | 10000.000000 | 92.21 | 8107.730966 | -1892.269034 |
 
 ## Validation
 
-`cash + market_value = 20171.506542 + 77989.214385 = 98160.720927`
+`cash + market_value = 20171.506542 + 80881.749190 = 101053.255732`
 
-`total_assets - initial_capital = -1839.279073`
+`total_assets - initial_capital = 1053.255732`
 
-Accounting difference: `0.000000`, within the required USD 0.05 tolerance. C1–C7 revalidated after the 2026-07-31 POST_CLOSE settlement.
+Accounting difference: `0.000000`, within the required USD 0.05 tolerance. C1–C7 revalidated after the 2026-08-03 POST_CLOSE settlement.
+
+**POST_CLOSE 2026-08-03 — settlement (no trades).** Broad risk-on rally (SPY +1.42% to 757.67; QQQ +1.76%; IWM +1.72%; VIX 15.86; US10Y 4.69% −5bp; strong ISM-manufacturing / industrial tape): total assets **98,160.72 → 101,053.26 (+2,892.53, +2.95%)**, beating SPY by +1.52pp; cumulative P&L **flips positive for the first time**: −1.84% → **+1.05%**. All 8 names green — drivers (mv Δ): BE +604.96 (+6.08%, premarket weakness falsified at close), ETN +574.75 (+5.55%, touched new 52-wk high 438.76 intraday), KTOS +556.03 (+5.60%, eve of Q2), MP +550.39 (+5.97%), PWR +203.04 (TD Cowen/Mizuho PT raises), GEV +162.85, ABT +136.76, RMBS +103.75. Actions: all 8 持有 — ETN strong close, no exhaustion → ACT-003 twin conditions unmet, no profit-taking on price alone (CORE-004); BE PREMARKET_RISK verdict = false alarm (L-005 noise call correct); KTOS Q2 tomorrow 8/4 AH (L-002 hold-into-earnings), MP Q2 8/6 (ACT-005 event blockade). Regime **RISK_ON** (VIX 15.86 < 16, SPY 757.67 > MA50 ~745, breadth broad: IWM +1.72%) → 90% ceiling; position ratio 80.04% within ceiling; slots 8/8.
 
 **POST_CLOSE 2026-07-31 — settlement (no trades).** Risk-on big-tech day (SPY +0.72% to 747.03; QQQ +0.65%; IWM −0.48%; VIX −6.44% to 15.99): total assets **97,127.42 → 98,160.72 (+1,033.30, +1.06%)**, beating SPY by +0.34pp; cumulative P&L improved −2.87% → **−1.84%**. Driver: ETN Q2 record beat (+7.32%, mv +706.52, flipped to profit +362.02); PWR +148.33 (Guggenheim upgrade), RMBS +123.98, KTOS +91.61, GEV +82.16, ABT +8.67; MP −64.62, BE −63.35. All 8 actions = 持有 (ETN catalyst realized but close strong, no exhaustion → ACT-003 not triggered). Regime RISK_ON (boundary: VIX 15.99, SPY back above 50d ref 744.72) → 90% ceiling; position ratio 79.45% now within ceiling; slots 8/8, no new builds possible.
 
