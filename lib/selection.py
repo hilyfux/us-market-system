@@ -21,6 +21,7 @@ THEME_TAGS: Dict[str, str] = {
 
 BASE_INITIAL_PCT = Decimal("10")   # ACT-004：单只新仓初始 = NAV 的 10%（= $10,000 @ $100k），
                                    # 比例制（随 NAV 缩放）、更均衡（用户 2026-07-31）。高 beta 经 ACT-007 折半。
+REPLACEMENT_MARGIN = Decimal("5")  # ACT-004 替换门：候选总分须高于最弱持仓 ≥5 分（确定性显著更高）。
 THEME_CAP_PCT = Decimal("25")      # ACT-006：同论题合并敞口上限（占 NAV）
 EVENT_BLACKOUT_SESSIONS = 5        # ACT-005：二元催化前禁新建的交易日数
 HIGH_BETA_SIZE_FACTOR = Decimal("0.5")  # ACT-007：高 beta 名义仓位折半
@@ -72,6 +73,22 @@ def volatility_scaled_size(base_pct: Decimal, is_high_beta: bool,
                            factor: Decimal = HIGH_BETA_SIZE_FACTOR) -> Decimal:
     """ACT-007（L-008 仓位看波动）：高 beta 标的名义仓位按 factor 折算（默认减半）。"""
     return (base_pct * factor) if is_high_beta else base_pct
+
+
+def replacement_gate(candidate_score, weakest_score,
+                     margin: Decimal = REPLACEMENT_MARGIN) -> Tuple[bool, str]:
+    """
+    ACT-004 满槽替换门（2026-08-04 用户裁定：确定性替换方法论）。
+    候选总分（九维综合评分：信息调研/基本面/事件驱动/产业链/财报/技术/指标/情绪/全球局势）
+    ≥ 最弱持仓总分 + margin 即允许「卖最弱、买候选」；
+    **不再要求旧仓满足「公司破坏」退出条件**——该条件只约束非替换的主动退出（ACT-002/003）。
+    非强制换仓：无更优候选（差距 < margin）则全体持有。
+    新仓建立仍须另过 screen_new_position()（ACT-005/006/007）。
+    """
+    diff = Decimal(str(candidate_score)) - Decimal(str(weakest_score))
+    if diff >= margin:
+        return True, "候选总分高于最弱持仓 %s 分 ≥ 门槛 %s 分 -> 允许替换（卖最弱、买候选）" % (diff, margin)
+    return False, "候选总分仅高 %s 分 < 门槛 %s 分（确定性未显著更高）-> 不替换、全体持有" % (diff, margin)
 
 
 def screen_new_position(symbol: str, base_pct: Decimal, nav: Decimal,

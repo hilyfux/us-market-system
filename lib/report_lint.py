@@ -19,6 +19,11 @@ report_lint — 把 SYSTEM.md §5「可读性与无歧义」标准里**机器可
   L7 账务透明        （2026-07-31 用户裁定）正文必须含账户行（「总资产」+当日盈亏）；
                      每条持仓行（^TICKER ·|｜ 开头且含 §4 动作词）必须含「成本」、
                      当日字段（今日/当日/昨日）与「累计」百分比。推送没有账目=用户看不见钱。
+  L8 盈亏色分        （2026-08-04 用户裁定：账目数据不得裸摆、须整形+着色）持仓行与
+                     账户行中的盈亏百分比必须用企业微信 `<font color>` 标注——
+                     正=warning（橙红）、负=info（绿）、零=comment（灰），东亚惯例红涨绿跌。
+                     行内含百分比但无颜色标签即拒绝入队。配套：L2 篇幅改按**可见字符**计
+                     （剔除 font 标签与 ** 加粗记号——格式标记不挤占内容预算）。
 
 纯语义类要求（自相矛盾、可两解、省略前提）无法在不做真正语言理解的前提下稳定判定，
 **刻意不在此断言**，仍由报告生成步骤负责——§5 已注明这一分工。
@@ -50,9 +55,13 @@ _NEGATION = ("无", "未", "没有", "不", "非", "no ", "not ", "without", "no
 _CONDITIONAL = ("若", "如果", "一旦", "假设", "检查", "复核",
                 "确认后", "待确认", "触发条件", "if ", "once ", "should ")
 _DATE_RE = re.compile(r"\d{4}-\d{2}-\d{2}|\d{1,2}\s*月\s*\d{1,2}\s*日")
-# L7 持仓行识别：行首为 1-5 位大写代码 + 分隔符（· 或 ｜ 或空格+·）。高精确：
-# emoji 行（🚨/📊）、「成交：」「账户：」等不匹配，不会被误加账务要求。
-_POSITION_LINE_RE = re.compile(r"^[A-Z]{1,5}\s*[·｜]")
+# L7 持仓行识别：行首为 1-5 位大写代码（可 ** 加粗）+ 分隔符（· 或 ｜ 或空格+·）。高精确：
+# emoji 行（🚨/📊）、「成交：」「账户：」「└ 原因」等不匹配，不会被误加账务要求。
+_POSITION_LINE_RE = re.compile(r"^(?:\*\*)?[A-Z]{1,5}(?:\*\*)?\s*[·｜]")
+# L8 着色检查：百分比形态（供持仓/账户行检测「有百分比却无颜色」）。
+_PCT_RE = re.compile(r"[+\-−]?\d+(?:\.\d+)?%")
+# L2 可见字符口径：企业微信 font 色彩标签与 markdown 加粗记号不计入篇幅。
+_MARKUP_RE = re.compile(r"</?font[^>]*>|\*\*")
 # 内部事务标记（2026-07-27，L6）：这些词属于系统内部（溯源/降级/升级项），
 # 出现在推送正文即违规——用户只要「代码·动作·原因」，问题内部解决。
 _INTERNAL_LEAK_MARKERS = ("stockanalysis.com", "roic.ai", "数据时间", "数据来源",
@@ -76,8 +85,9 @@ def stage_from_report_key(report_key: str) -> Optional[str]:
 
 
 def _char_count(markdown: str) -> int:
-    """字数 = 非空白字符数（对 markdown 标记从严，宁紧勿松）。"""
-    return len(re.sub(r"\s+", "", markdown))
+    """字数 = 非空白**可见**字符数（2026-08-04：剔除 font 色彩标签与 ** 加粗记号。
+    色分是用户要求的必需格式，格式标记不得挤占内容篇幅预算）。"""
+    return len(re.sub(r"\s+", "", _MARKUP_RE.sub("", markdown)))
 
 
 def lint_report(markdown: str, stage: str) -> Dict[str, object]:
@@ -149,5 +159,15 @@ def lint_report(markdown: str, stage: str) -> Dict[str, object]:
             miss.append("累计%")
         if miss:
             v.append("L7 持仓行缺账务字段 %s：%r" % ("/".join(miss), ln.strip()[:50]))
+
+    # L8 盈亏色分（2026-08-04 用户裁定：红涨绿跌着色，数据不得裸摆）
+    for ln in lines:
+        s = ln.strip()
+        is_pos = bool(_POSITION_LINE_RE.match(s) and _VALID_ACTION_RE.search(s))
+        is_acct = "总资产" in s
+        if not (is_pos or is_acct):
+            continue  # 📊/🚨/└ 原因行等不作着色要求
+        if _PCT_RE.search(s) and "<font color=" not in s:
+            v.append("L8 盈亏未着色：持仓/账户行的百分比须用 <font color> 红涨绿跌标注：%r" % s[:50])
 
     return {"ok": not v, "violations": v}
