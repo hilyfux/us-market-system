@@ -4,6 +4,15 @@
 > **VERIFIED**（≥2 源零/微偏差，已入账）｜ **GAP**（未完成结算，须显式补救）｜ **PARTIAL**（部分核实）。
 > 钱包 `valuation_date` 只允许指向本簿中 VERIFIED 的日期。
 
+## 2026-08-04（周二）— VERIFIED（当晚结算，T+~60–75min 双源零偏差；连续第三个当晚 VERIFIED）
+
+- 方法：AV 首 3 呼成功（SPY 日线 + GEV/ETN GLOBAL_QUOTE 结算值）后额度耗尽。其余 6 名 **stockanalysis 报价页**（"At close: Aug 4, 2026, 4:00 PM EDT" 戳记；ABT 首抓命中 3:43 PM 盘中缓存，?cb= 缓存参数重抓后取得结算戳）+ **Google Finance beta**（"Closed: Aug 4, 4:00 PM GMT-4" 戳记；边缘缓存彩票——首轮命中 7/28、7/29、8/3 等陈旧快照，轮换 ?v= 参数至结算戳出现，与 8/3 方法一致）双源 0.00%；GEV 第二源 roic.ai Δ0.086%、ETN 第二源 GF-beta 关联行 Δ0.02%（roic Δ0.75% 盘中缓存弃用）、ABT 第二源 roic.ai Δ0.18%。roic/stockscan/GF-classic 当晚整体陈旧（PWR roic 显示盘中 702.69、stockscan 停留 7/24、GF-classic 停留 2 月）——黑名单行为复现，均未采用。prev close 锚定：8/8 与 8/3 VERIFIED 收盘 0.00% 一致。
+- 官方收盘（VERIFIED）：GEV 1018.07（+1.12%）｜ PWR 693.00（+1.88%）｜ MP 47.47（+8.28%）｜ BE 228.11（+4.48%）｜ KTOS 51.87（+5.41%）｜ RMBS 100.55（+9.04%）｜ ETN 444.69（+1.47%，再创 52 周新高，盘中 451.96）｜ ABT 105.46（−1.55%，唯一收跌）
+- 基准：SPY 771.24（+1.79%，AV 结算 OHLC）｜ QQQ 723.85（+3.40%，At-close 戳）｜ IWM 301.71（+1.85%，At-close 戳）｜ VIX 16.41（TradingEconomics Aug/04 行；页面叙述 16.45，取表值）｜ US10Y 4.63%（−5bp，TradingEconomics 显式 Aug 4 戳）｜ 宽度：IWM/QQQ/SPY 同步 +1.8–3.4%＝广度良好（间接）
+- 环境分类：**CHOPPY**（VIX 16.41 ≥ 16 触发；SPY 771.24 > MA50 745.89【AV 50 收盘实算】、远高于 MA200 ~700 参考）→ 仓位上限 **75%**；仓位率 80.60% 超限（用户授权均衡计划遗留）→ 不强平、新建封锁；满槽 8/8。
+- 入账：valuation_date 推进至 **2026-08-04**；钱包 101,053.26 → **103,951.12**（+2,897.86，+2.87% vs SPY +1.79% → +1.08pp）；累计 **+3.95%**（连续第 2 日新高）；C1–C7 diff=0、W1 lag=0。**无交易**。
+- 事件与信号验证：**KTOS Q2 盘后双超**（EPS $0.21 vs 共识 0.13–0.15、营收 $458.8M vs ~$411M，YoY +30.5%、有机 +19.1%；AH +3.6%）→ 📊 前瞻 beat_confirm 情景命中（decision-log 已回填），L-002 正样本 #4，明日确认收盘后评估管理；**ETN 52 周高复核第 2 日**：再创新高、无衰竭 → ACT-003 不触发（CORE-004）；**BE 盘后律所征集**（scandium 披露集体诉讼）＝招揽阶段噪声（L-005 口径），非核实公司破坏 → 持有并跟踪；MP Q2 8/6 盘后（ACT-005 封锁，共识源分歧 8/6 前复核）。
+
 ## 2026-08-03（周一）— VERIFIED（当晚结算，T+~60min 双源零偏差；连续第二个当晚 VERIFIED）
 
 - 方法：AV 免费额度当日已被盘中检查点耗尽（首呼即 rate_limit）。8/8 个股 **stockanalysis 报价页**（每页 "At close: Aug 3, 2026, 4:00 PM EDT" 戳记，带 cache-buster）+ **Google Finance beta**（"Closed: Aug 3, 4:00 PM GMT-4" 戳记；首轮 6/8 命中陈旧盘中缓存，二轮加 &v=2 缓存参数后全部结算戳通过）双源 0.00%；ABT 第二源=roic.ai 107.16（Δ0.04%，GF 该页缓存未刷）。roic 各页隐含 prev close 与 7/31 VERIFIED 收盘 8/8 精确一致（会话辨识交叉证据）；stockscan/stocktitan 当晚仍陈旧（弃用，与 7/31 观测一致）。

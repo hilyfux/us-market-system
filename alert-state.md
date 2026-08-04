@@ -1,7 +1,7 @@
 # Alert State
 
 schema_version: 2.0
-last_reconciled_at: 2026-08-04T08:38:00+08:00
+last_reconciled_at: 2026-08-05T05:30:00+08:00
 
 ## Rules
 
@@ -53,9 +53,17 @@ last_reconciled_at: 2026-08-04T08:38:00+08:00
 | INTRADAY+2026-08-03+1530 | 2026-08-04T03:34:54+08:00 | enterprise_wechat | errcode=0 |
 | POSTCLOSE+2026-08-03 | 2026-08-04T04:58:13+08:00 | enterprise_wechat | errcode=0 |
 | MORNING+2026-08-03 | 2026-08-04T08:37:01+08:00 | enterprise_wechat | errcode=0 |
+| PREMARKET+2026-08-04 | 2026-08-04T20:36:31+08:00 | enterprise_wechat | errcode=0 |
+| INTRADAY+2026-08-04+1000 | 2026-08-04T22:07:52+08:00 | enterprise_wechat | errcode=0 |
+| INTRADAY+2026-08-04+1230 | 2026-08-05T00:36:25+08:00 | enterprise_wechat | errcode=0 |
+| INTRADAY+2026-08-04+1530 | 2026-08-05T03:39:07+08:00 | enterprise_wechat | errcode=0 |
 
 ## Pending close signals
 
+- KTOS Q2（2026-08-04 盘后）— **CLEARED（基本面双超）2026-08-04 POST_CLOSE**：EPS $0.21 vs 共识 0.13–0.15、营收 $458.8M（+30.5% YoY）双超，AH +3.6%；📊 前瞻 beat_confirm 命中已回填 decision-log。价格确认待 8/5 官方收盘（若冲高衰竭收盘确认 → ACT-003 评估，否则持有）。
+- ETN 52 周高复核（2026-08-04）— 第 2 日再创新高 444.69（盘中 451.96，+1.47%）强收盘：仍无衰竭/高位风险收盘确认 → ACT-003 不触发，持有（CORE-004）。次日续复核。
+- BE 盘后律所征集（2026-08-04）— Bernstein Liebhard 等就 scandium 供应披露征集集体诉讼原告（AH −0.9%）：招揽阶段=噪声（L-005 口径），非核实公司破坏 → 持有；升级条件：法院立案 + 公司披露实质财务影响。
+- 2026-08-04 settlement — **VERIFIED same night**（连续第三晚）：8/8 双源结算 0.00–0.2%（AV OHLC / stockanalysis At-close + GF-beta Closed 戳）；valuation_date → 2026-08-04；wallet 103,951.12；C1–C7 diff=0；W1 lag=0；**累计 +3.95% 连续第 2 日新高**；环境 RISK_ON→CHOPPY（VIX 16.41）。No trades。MP Q2 8/6 盘后（ACT-005 封锁）。
 - BE 盘前弱势（2026-08-03 PREMARKET_RISK）— **CLEARED（误报）2026-08-03 POST_CLOSE**：官方收盘 218.32 +6.08%（双源 0.00%），盘前 −3.9% 未获收盘证实；L-005 噪声判定正确（全日盘中持续走强，尾盘 +7.15%）。
 - ETN 52 周高复核（2026-08-03）— 盘中触及**新 52 周高 438.76**、收 438.23（+5.55%）强收盘：无衰竭/无高位风险收盘确认 → ACT-003 不触发，持有（CORE-004 不按涨幅止盈）。次日续复核。
 - 2026-08-03 settlement — **VERIFIED same night**（连续第二晚）：8/8 双源结算 0.00%（stockanalysis At-close + Google Finance beta Closed；ABT 第二源 roic.ai Δ0.04%）；valuation_date → 2026-08-03；wallet 101,053.26；C1–C7 diff=0；W1 lag=0；**累计盈亏首次转正 +1.05%**。No trades。KTOS Q2 8/4 盘后（forecast 已登记，明晚 POST_CLOSE 回填）。
