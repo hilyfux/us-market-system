@@ -500,6 +500,21 @@ def test_report_lint():
     leak3 = rl.lint_report("# 盘中｜2026-07-27\n持有；MARKET_DATA_DEGRADED", "INTRADAY")
     check("升级项代码进正文必须判违规（L6）", not leak3["ok"])
 
+    # L6 扩展（2026-08-04 用户裁定）：机制词/规则代号不得进推送——说人话
+    jargon1 = rl.lint_report(
+        "# 盘中｜2026-08-04\nABT · 持有 · 成本103.83｜今日<font color=\"warning\">+1.2%</font>｜累计<font color=\"warning\">+1.7%</font> · 未过 ACT-005 事件封锁\n"
+        "账户：总资产 97,127（今日 <font color=\"warning\">+0.4%</font>）", "INTRADAY")
+    check("规则代号 ACT-xxx 进正文必须判违规（L6 平实语言）", not jargon1["ok"])
+    jargon2 = rl.lint_report(
+        "# 盘中｜2026-08-04\nABT · 持有 · 成本103.83｜今日<font color=\"warning\">+1.2%</font>｜累计<font color=\"warning\">+1.7%</font> · 候选未过门槛，不替换\n"
+        "账户：总资产 97,127（今日 <font color=\"warning\">+0.4%</font>）", "INTRADAY")
+    check("机制词「门槛」进正文必须判违规（L6 平实语言）", not jargon2["ok"])
+    hotword = rl.lint_report(
+        "# 盘中｜2026-08-04\nABT · 持有 · 成本103.83｜今日<font color=\"warning\">+1.2%</font>｜累计<font color=\"warning\">+1.7%</font> · 热门题材拥挤，按持仓逻辑不动\n"
+        "账户：总资产 97,127（今日 <font color=\"warning\">+0.4%</font>）", "INTRADAY")
+    check("日常词「热门」不得误伤（L6 高精确选词）", hotword["ok"],
+          str(hotword["violations"]))
+
     # L2：篇幅超限（晨间 700 上限）
     toolong = rl.lint_report("# 晨报｜2026-07-27\n" + "字" * 720, "MORNING")
     check("晨间超 700 字必须判违规（L2）", not toolong["ok"])
