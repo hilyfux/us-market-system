@@ -3,52 +3,54 @@
 schema_version: 2.0
 base_currency: USD
 initial_capital: 100000.000000
-last_reconciled_at: 2026-08-05T05:30:00+08:00
-valuation_date: 2026-08-04
+last_reconciled_at: 2026-08-06T04:55:00+08:00
+valuation_date: 2026-08-05
 valuation_status: VERIFIED
-valuation_source: 2026-08-04 official regular-session closes, settled SAME NIGHT at T+~60–75min (3rd consecutive). All 8 names verified by 2 independent settled sources: GEV/ETN Alpha Vantage settled OHLC (+ roic/GF-beta ≤0.2%); ABT/PWR/MP/BE/KTOS/RMBS stockanalysis At-close stamps + Google Finance beta Closed-stamps 0.00% (ABT 2nd source roic.ai Δ0.18%). Prev-close cross-check vs verified 8/3 closes 0.00% on 8/8. AV free quota exhausted after 3 calls (25/day), web sources for the rest. No trades this session.
-prior_valuation_date: 2026-08-03 (superseded)
+valuation_source: 2026-08-05 official regular-session closes, settled SAME NIGHT at T+~35-60min (4th consecutive). All 8 names verified by 2 independent sources: MP/BE/KTOS/RMBS stockanalysis At-close stamps + Google Finance beta Closed-stamps 0.00%; GEV/ETN/ABT/PWR stockanalysis At-close + Alpha Vantage GLOBAL_QUOTE (delta 0.015-0.066%, AV quota exhausted after 4 of 25 calls). Benchmarks SPY/QQQ/IWM At-close stamps; VIX 15.81 web print (single source). No trades this session.
+prior_valuation_date: 2026-08-04 (superseded)
 
 ## Balances
 
 | item | USD |
 |---|---:|
 | cash | 20171.506542 |
-| GEV market value | 10066.123348 |
-| ETN market value | 11097.988697 |
-| ABT market value | 10157.059723 |
-| PWR market value | 10958.374350 |
-| MP market value | 10577.650334 |
-| BE market value | 11030.981702 |
-| KTOS market value | 11050.394707 |
-| RMBS market value | 8841.040544 |
-| total market value | 83779.613405 |
-| total assets | 103951.119947 |
-| cumulative P&L | 3951.119947 |
+| GEV market value | 10065.035728 |
+| ETN market value | 11162.626514 |
+| ABT market value | 10181.137714 |
+| PWR market value | 10800.086721 |
+| MP market value | 10675.694702 |
+| BE market value | 11331.769507 |
+| KTOS market value | 11789.644170 |
+| RMBS market value | 8555.278418 |
+| total market value | 84561.273475 |
+| total assets | 104732.780017 |
+| cumulative P&L | 4732.780017 |
 | realized P&L | 171.506542 |
-| unrealized P&L | 3779.613405 |
-| position ratio | 80.595200% |
+| unrealized P&L | 4561.273475 |
+| position ratio | 80.740026% |
 
 ## Position accounting
 
 | symbol | quantity | cost | cost basis | reference close | market value | unrealized P&L |
 |---|---:|---:|---:|---:|---:|---:|
-| GEV | 9.887457 | 1011.38 | 10000.000000 | 1018.07 | 10066.123348 | 66.123348 |
-| ETN | 24.956686 | 400.69 | 10000.000000 | 444.69 | 11097.988697 | 1097.988697 |
-| ABT | 96.311964 | 103.83 | 10000.000000 | 105.46 | 10157.059723 | 157.059723 |
-| PWR | 15.812950 | 632.39 | 10000.000000 | 693.00 | 10958.374350 | 958.374350 |
-| MP | 222.828109 | 44.88 | 10000.000000 | 47.47 | 10577.650334 | 577.650334 |
-| BE | 48.358168 | 206.79 | 10000.000000 | 228.11 | 11030.981702 | 1030.981702 |
-| KTOS | 213.040191 | 46.94 | 10000.000000 | 51.87 | 11050.394707 | 1050.394707 |
-| RMBS | 87.926808 | 113.73 | 10000.000000 | 100.55 | 8841.040544 | -1158.959456 |
+| GEV | 9.887457 | 1011.38 | 10000.000000 | 1017.96 | 10065.035728 | 65.035728 |
+| ETN | 24.956686 | 400.69 | 10000.000000 | 447.28 | 11162.626514 | 1162.626514 |
+| ABT | 96.311964 | 103.83 | 10000.000000 | 105.71 | 10181.137714 | 181.137714 |
+| PWR | 15.812950 | 632.39 | 10000.000000 | 682.99 | 10800.086721 | 800.086721 |
+| MP | 222.828109 | 44.88 | 10000.000000 | 47.91 | 10675.694702 | 675.694702 |
+| BE | 48.358168 | 206.79 | 10000.000000 | 234.33 | 11331.769507 | 1331.769507 |
+| KTOS | 213.040191 | 46.94 | 10000.000000 | 55.34 | 11789.644170 | 1789.644170 |
+| RMBS | 87.926808 | 113.73 | 10000.000000 | 97.30 | 8555.278418 | -1444.721582 |
 
 ## Validation
 
-`cash + market_value = 20171.506542 + 83779.613405 = 103951.119947`
+`cash + market_value = 20171.506542 + 84561.273475 = 104732.780017`
 
-`total_assets - initial_capital = 3951.119947`
+`total_assets - initial_capital = 4732.780017`
 
-Accounting difference: `0.000000`, within the required USD 0.05 tolerance. C1–C7 revalidated after the 2026-08-04 POST_CLOSE settlement.
+Accounting difference: `0.000000`, within the required USD 0.05 tolerance. C1–C7 revalidated after the 2026-08-05 POST_CLOSE settlement.
+
+**POST_CLOSE 2026-08-05 — settlement (no trades).** Consolidation day after two big risk-on sessions (SPY −0.20% to 769.79 after a new intraday 52-wk high 776.85; QQQ −0.90%; IWM −0.64%; VIX 15.81 back below 16 → regime CHOPPY→**RISK_ON**, ceiling 75%→90%; ISM services 54.1 vs 54.5 est, employment sub-index 47.4 weak; NFP Friday): total assets **103,951.12 → 104,732.78 (+781.66, +0.75%)**, beating SPY by +0.95pp; cumulative P&L **+3.95% → +4.73%, third consecutive all-time high**. 5/8 green — drivers (mv Δ): KTOS +739.25 (+6.69%, post-earnings day-2 rally; intraday spike to 62.34 faded ~11% but the close held far above prior close → NO exhaustion-close confirmation, ACT-003 not triggered, held), BE +300.79 (+2.73%, class action now FILED but no company-disclosed financial impact and no price damage → held, status upgraded to filed-case watch), MP +98.04 (+0.93%, Q2 tomorrow AH; consensus revenue corrected ~$935M→~$96M — bad source caught by the pre-earnings recheck), ETN +64.64 (+0.56%, 3rd straight day touching a new 52-wk high 453.50; ex-div $1.10 on 8/7), ABT +24.08 (+0.24%); GEV −1.09 (−0.01%), PWR −158.29 (−1.44%, post-earnings consolidation), RMBS −285.76 (−3.23%, semis pullback; $100M ASR = supportive IR). Actions: all 8 持有. HYP-001 window (7/29→8/5) adjudicated COUNTER — BE +43.1% vs theme peers (GEV +13.1%, ETN +23.6%); remains HYPOTHESIS with lowered confidence. Regime **RISK_ON** (VIX 15.81 < 16; SPY >> MA50 ~747) → 90% ceiling; position ratio 80.74% back WITHIN ceiling (over-ceiling flag cleared); slots 8/8.
 
 **POST_CLOSE 2026-08-04 — settlement (no trades).** Second consecutive broad risk-on day (SPY +1.79% to 771.24; QQQ +3.40%; IWM +1.85%; VIX 16.41 — back above 16 → regime RISK_ON→**CHOPPY**, ceiling 90%→75%; US10Y 4.63% −5bp): total assets **101,053.26 → 103,951.12 (+2,897.86, +2.87%)**, beating SPY by +1.08pp; cumulative P&L **+1.05% → +3.95%**, second consecutive all-time high. 7/8 green — drivers (mv Δ): MP +808.87 (+8.28%, rare-earth policy narrative + pre-earnings squeeze), RMBS +733.31 (+9.04%, 4th recovery day, reclaimed 100), KTOS +566.69 (+5.41%, eve-of-print bid), BE +473.43 (+4.48%), PWR +202.41 (+1.88%), ETN +161.22 (+1.47%, new 52-wk high 444.69), GEV +111.83; ABT −159.88 (−1.55%, lone red, defensives out of rotation). Actions: all 8 持有 — **KTOS Q2 reported AH: EPS $0.21 vs cons 0.13–0.15 BEAT, rev $458.8M (+30.5% YoY) BEAT, AH +3.6%** (L-002 hold-into-earnings positive sample #4; manage after tomorrow's confirming close); ETN 2nd straight new high, no exhaustion → ACT-003 unmet (CORE-004); BE AH law-firm class-action solicitations = noise pending verification (L-005); MP Q2 8/6 (ACT-005 blockade). Regime **CHOPPY** (VIX 16.41 ≥ 16; SPY >> MA50 745.89 actual / MA200 ~700 ref) → 75% ceiling; position ratio 80.60% **above ceiling** (legacy user-authorized balanced plan) → no forced sell, new builds blocked; slots 8/8.
 

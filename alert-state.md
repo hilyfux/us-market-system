@@ -1,7 +1,7 @@
 # Alert State
 
 schema_version: 2.0
-last_reconciled_at: 2026-08-05T05:03:00+08:00
+last_reconciled_at: 2026-08-06T04:55:00+08:00
 
 ## Rules
 
@@ -58,9 +58,18 @@ last_reconciled_at: 2026-08-05T05:03:00+08:00
 | INTRADAY+2026-08-04+1230 | 2026-08-05T00:36:25+08:00 | enterprise_wechat | errcode=0 |
 | INTRADAY+2026-08-04+1530 | 2026-08-05T03:39:07+08:00 | enterprise_wechat | errcode=0 |
 | POSTCLOSE+2026-08-04 | 2026-08-05T04:50:24+08:00 | enterprise_wechat | errcode=0 |
+| MORNING+2026-08-04 | 2026-08-05T08:42:15+08:00 | enterprise_wechat | errcode=0 |
+| PREMARKET+2026-08-05 | 2026-08-05T20:36:48+08:00 | enterprise_wechat | errcode=0 |
+| INTRADAY+2026-08-05+1000 | 2026-08-05T22:07:07+08:00 | enterprise_wechat | errcode=0 |
+| INTRADAY+2026-08-05+1230 | 2026-08-06T00:38:40+08:00 | enterprise_wechat | errcode=0 |
+| INTRADAY+2026-08-05+1530 | 2026-08-06T03:38:20+08:00 | enterprise_wechat | errcode=0 |
 
 ## Pending close signals
 
+- KTOS 8/5 收盘价格确认 — **CLEARED（无衰竭收盘）2026-08-05 POST_CLOSE**：收 55.34 +6.69%（日高 62.34 回落 ~11.2% 留长上影，但收盘远高于昨收 51.87）→ 冲高衰竭未获收盘确认，ACT-003 不触发 → 持有，次日常规复核。
+- ETN 52 周高复核（2026-08-05）— 第 3 日盘中新高 453.50、收 447.28（+0.56%）收涨无衰竭 → ACT-003 不触发，持有（CORE-004）。注意 8/7 除息 $1.10（收盘价将技术性下调，勿误读为衰竭）。
+- BE 诉讼升级半触发（2026-08-05）— 集体诉讼**已由股东正式立案**（Bernstein Liebhard 8/4 官宣、多家律所 8/1 起诉状）：升级条件①法院立案＝满足；②公司披露实质财务影响＝未满足；收 234.33 +2.73% 无价格损伤 → 维持持有，状态「招揽噪声」→「已立案观察」；减仓评估需②成立或收盘价格破坏确认（ACT-002）。
+- 2026-08-05 settlement — **VERIFIED same night**（连续第四晚）：8/8 双源 0.00–0.07%（stockanalysis At-close + AV 4 名/GF-beta 4 名）；valuation_date → 2026-08-05；wallet 104,732.78；C1–C7 diff=0；W1 lag=0；**累计 +4.73% 连续第 3 日新高**；环境 CHOPPY→RISK_ON（VIX 15.81），仓位率 80.74% 回上限内。No trades。MP Q2 明晚盘后（共识营收修正 ~$96M）。
 - KTOS Q2（2026-08-04 盘后）— **CLEARED（基本面双超）2026-08-04 POST_CLOSE**：EPS $0.21 vs 共识 0.13–0.15、营收 $458.8M（+30.5% YoY）双超，AH +3.6%；📊 前瞻 beat_confirm 命中已回填 decision-log。价格确认待 8/5 官方收盘（若冲高衰竭收盘确认 → ACT-003 评估，否则持有）。
 - ETN 52 周高复核（2026-08-04）— 第 2 日再创新高 444.69（盘中 451.96，+1.47%）强收盘：仍无衰竭/高位风险收盘确认 → ACT-003 不触发，持有（CORE-004）。次日续复核。
 - BE 盘后律所征集（2026-08-04）— Bernstein Liebhard 等就 scandium 供应披露征集集体诉讼原告（AH −0.9%）：招揽阶段=噪声（L-005 口径），非核实公司破坏 → 持有；升级条件：法院立案 + 公司披露实质财务影响。
