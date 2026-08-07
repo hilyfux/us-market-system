@@ -17,6 +17,7 @@ from typing import Dict, Optional, Tuple
 THEME_TAGS: Dict[str, str] = {
     "GEV": "ai_power", "ETN": "ai_power", "PWR": "ai_power", "BE": "ai_power",
     "KTOS": "defense", "MP": "rare_earth", "RMBS": "ai_memory", "ABT": "healthcare",
+    "MSFT": "ai_software",  # 2026-08-06 MORNING 注册（替换候选入档，8/5 双源收盘 487.46）
 }
 
 BASE_INITIAL_PCT = Decimal("10")   # ACT-004：单只新仓初始 = NAV 的 10%（= $10,000 @ $100k），

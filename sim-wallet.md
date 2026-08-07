@@ -3,52 +3,58 @@
 schema_version: 2.0
 base_currency: USD
 initial_capital: 100000.000000
-last_reconciled_at: 2026-08-06T04:55:00+08:00
-valuation_date: 2026-08-05
+last_reconciled_at: 2026-08-07T17:40:00+08:00
+valuation_date: 2026-08-06
 valuation_status: VERIFIED
-valuation_source: 2026-08-05 official regular-session closes, settled SAME NIGHT at T+~35-60min (4th consecutive). All 8 names verified by 2 independent sources: MP/BE/KTOS/RMBS stockanalysis At-close stamps + Google Finance beta Closed-stamps 0.00%; GEV/ETN/ABT/PWR stockanalysis At-close + Alpha Vantage GLOBAL_QUOTE (delta 0.015-0.066%, AV quota exhausted after 4 of 25 calls). Benchmarks SPY/QQQ/IWM At-close stamps; VIX 15.81 web print (single source). No trades this session.
-prior_valuation_date: 2026-08-04 (superseded)
+valuation_source: 2026-08-06 official regular-session closes, settled OUT-OF-BAND on 2026-08-07 (user-authorized repair after a credit-exhaustion outage; the scheduled POST_CLOSE slot never fired — this is NOT a same-night settlement). 8/8 names verified by 2 independent providers at 0.00%: Alpha Vantage GLOBAL_QUOTE (latest trading day=2026-08-06) + stockanalysis.com comparison tool (S&P Global / CBOE tape) — close, % change AND share-exact volume matched on all 8. Prev-close anchor: 8/8 equal the 2026-08-05 VERIFIED closes to the cent. MP additionally carries the "At close: Aug 6, 2026, 4:00 PM EDT" stamp with OHLC+volume exact. Benchmarks SPY/QQQ/IWM 2-source 0.00%. VIX 8/6 = 15.27 PARTIAL (see data/post-close.md). US10Y 8/6 = GAP (FRED/AV published only through 8/5 = 4.63%, which closes the previously-open 8/5 US10Y gap).
+prior_valuation_date: 2026-08-05 (superseded)
 
 ## Balances
 
 | item | USD |
 |---|---:|
-| cash | 20171.506542 |
-| GEV market value | 10065.035728 |
-| ETN market value | 11162.626514 |
-| ABT market value | 10181.137714 |
-| PWR market value | 10800.086721 |
-| MP market value | 10675.694702 |
-| BE market value | 11331.769507 |
-| KTOS market value | 11789.644170 |
-| RMBS market value | 8555.278418 |
-| total market value | 84561.273475 |
-| total assets | 104732.780017 |
-| cumulative P&L | 4732.780017 |
-| realized P&L | 171.506542 |
-| unrealized P&L | 4561.273475 |
-| position ratio | 80.740026% |
+| cash | 18726.784840 |
+| GEV market value | 9890.423237 |
+| ETN market value | 11185.337098 |
+| ABT market value | 10397.839633 |
+| PWR market value | 10560.520528 |
+| MP market value | 10582.106896 |
+| BE market value | 11072.086145 |
+| KTOS market value | 12230.637365 |
+| MSFT market value | 10254.379969 |
+| total market value | 86173.330873 |
+| total assets | 104900.115713 |
+| cumulative P&L | 4900.115713 |
+| realized P&L | -1273.215040 |
+| unrealized P&L | 6173.330753 |
+| position ratio | 82.147985% |
 
 ## Position accounting
 
 | symbol | quantity | cost | cost basis | reference close | market value | unrealized P&L |
 |---|---:|---:|---:|---:|---:|---:|
-| GEV | 9.887457 | 1011.38 | 10000.000000 | 1017.96 | 10065.035728 | 65.035728 |
-| ETN | 24.956686 | 400.69 | 10000.000000 | 447.28 | 11162.626514 | 1162.626514 |
-| ABT | 96.311964 | 103.83 | 10000.000000 | 105.71 | 10181.137714 | 181.137714 |
-| PWR | 15.812950 | 632.39 | 10000.000000 | 682.99 | 10800.086721 | 800.086721 |
-| MP | 222.828109 | 44.88 | 10000.000000 | 47.91 | 10675.694702 | 675.694702 |
-| BE | 48.358168 | 206.79 | 10000.000000 | 234.33 | 11331.769507 | 1331.769507 |
-| KTOS | 213.040191 | 46.94 | 10000.000000 | 55.34 | 11789.644170 | 1789.644170 |
-| RMBS | 87.926808 | 113.73 | 10000.000000 | 97.30 | 8555.278418 | -1444.721582 |
+| GEV | 9.887457 | 1011.38 | 10000.000000 | 1000.30 | 9890.423237 | -109.576763 |
+| ETN | 24.956686 | 400.69 | 10000.000000 | 448.19 | 11185.337098 | 1185.337098 |
+| ABT | 96.311964 | 103.83 | 10000.000000 | 107.96 | 10397.839633 | 397.839633 |
+| PWR | 15.812950 | 632.39 | 10000.000000 | 667.84 | 10560.520528 | 560.520528 |
+| MP | 222.828109 | 44.88 | 10000.000000 | 47.49 | 10582.106896 | 582.106896 |
+| BE | 48.358168 | 206.79 | 10000.000000 | 228.96 | 11072.086145 | 1072.086145 |
+| KTOS | 213.040191 | 46.94 | 10000.000000 | 57.41 | 12230.637365 | 2230.637365 |
+| MSFT | 20.514504 | 487.46 | 10000.000120 | 499.86 | 10254.379969 | 254.379849 |
 
 ## Validation
 
-`cash + market_value = 20171.506542 + 84561.273475 = 104732.780017`
+`cash + market_value = 18726.784840 + 86173.330873 = 104900.115713`
 
-`total_assets - initial_capital = 4732.780017`
+`total_assets - initial_capital = 4900.115713`
 
-Accounting difference: `0.000000`, within the required USD 0.05 tolerance. C1–C7 revalidated after the 2026-08-05 POST_CLOSE settlement.
+`cash traceability (C2): 100000 - 80000.000120 + (-1273.215040) = 18726.784840` ✓
+
+`cumulative = realized + unrealized (C6): -1273.215040 + 6173.330753 = 4900.115713` ✓
+
+Accounting difference: `0.000000`, within the required USD 0.05 tolerance. C1–C7 revalidated after the 2026-08-06 MORNING replacement trades (RMBS 平仓 / MSFT 建仓). MSFT cost basis 10000.000120 = qty×px exact (deviation from the $10k standard is $0.00012, quantization only, far under the 0.05 tolerance — no SIZE_EXCEPTION needed).
+
+**MORNING 2026-08-06 (valuation 2026-08-05) — deterministic replacement executed (2 trades).** First execution of the 2026-08-04 user-ruled replacement methodology: nine-dim rescore put RMBS at 68 (weakest, 2nd consecutive day) vs candidate MSFT 85 → diff +17 ≥ 5 gate. All three of yesterday's blockers cleared overnight: (1) regime back to RISK_ON (VIX 15.81 < 16, 2-source) → 90% ceiling, post-trade ratio 82.12% within; (2) MSFT 8/5 close 487.46 verified 2-source 0.00% OHLC-exact; (3) 3-day surge +4.89% ≤ 8% (464.72→487.65→492.81→487.46). **Sold RMBS 87.926808 sh @97.30** (trade 2026-08-05-RMBS-平仓-01), realized **−1,444.721582** — exit by relative-certainty ranking, not stop-loss; DDR5 thesis not impaired (entry timing was the recorded lesson). **Bought MSFT 20.514504 sh @487.46** (trade 2026-08-05-MSFT-建仓-01), cost basis 10,000.000120; planned stop official close < 437.00 (−10.35%, risk ≈1.0% NAV, close-confirmed); no fixed take-profit (ACT-003 only). Cash 20,171.51 → 18,726.78; realized cum +171.51 → −1,273.22; total assets unchanged 104,732.78 (trade at market); position ratio 80.74% → 82.12%. Slots stay 8/8; theme mix now ai_power 4 / defense 1 / rare_earth 1 / healthcare 1 / ai_software 1 (ai_memory exited).
 
 **POST_CLOSE 2026-08-05 — settlement (no trades).** Consolidation day after two big risk-on sessions (SPY −0.20% to 769.79 after a new intraday 52-wk high 776.85; QQQ −0.90%; IWM −0.64%; VIX 15.81 back below 16 → regime CHOPPY→**RISK_ON**, ceiling 75%→90%; ISM services 54.1 vs 54.5 est, employment sub-index 47.4 weak; NFP Friday): total assets **103,951.12 → 104,732.78 (+781.66, +0.75%)**, beating SPY by +0.95pp; cumulative P&L **+3.95% → +4.73%, third consecutive all-time high**. 5/8 green — drivers (mv Δ): KTOS +739.25 (+6.69%, post-earnings day-2 rally; intraday spike to 62.34 faded ~11% but the close held far above prior close → NO exhaustion-close confirmation, ACT-003 not triggered, held), BE +300.79 (+2.73%, class action now FILED but no company-disclosed financial impact and no price damage → held, status upgraded to filed-case watch), MP +98.04 (+0.93%, Q2 tomorrow AH; consensus revenue corrected ~$935M→~$96M — bad source caught by the pre-earnings recheck), ETN +64.64 (+0.56%, 3rd straight day touching a new 52-wk high 453.50; ex-div $1.10 on 8/7), ABT +24.08 (+0.24%); GEV −1.09 (−0.01%), PWR −158.29 (−1.44%, post-earnings consolidation), RMBS −285.76 (−3.23%, semis pullback; $100M ASR = supportive IR). Actions: all 8 持有. HYP-001 window (7/29→8/5) adjudicated COUNTER — BE +43.1% vs theme peers (GEV +13.1%, ETN +23.6%); remains HYPOTHESIS with lowered confidence. Regime **RISK_ON** (VIX 15.81 < 16; SPY >> MA50 ~747) → 90% ceiling; position ratio 80.74% back WITHIN ceiling (over-ceiling flag cleared); slots 8/8.
 
