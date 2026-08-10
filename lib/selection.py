@@ -18,6 +18,9 @@ THEME_TAGS: Dict[str, str] = {
     "GEV": "ai_power", "ETN": "ai_power", "PWR": "ai_power", "BE": "ai_power",
     "KTOS": "defense", "MP": "rare_earth", "RMBS": "ai_memory", "ABT": "healthcare",
     "MSFT": "ai_software",  # 2026-08-06 MORNING 注册（替换候选入档，8/5 双源收盘 487.46）
+    # 2026-08-08 MORNING 注册：AI 算力芯片是与 ai_power（发电/输配电）、ai_software（云与应用）
+    # 不同的产业链环节与驱动因子，按 L-009「论题而非 GICS」口径单列。
+    "NVDA": "ai_semis", "AVGO": "ai_semis",
 }
 
 BASE_INITIAL_PCT = Decimal("10")   # ACT-004：单只新仓初始 = NAV 的 10%（= $10,000 @ $100k），

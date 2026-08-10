@@ -3,56 +3,60 @@
 schema_version: 2.0
 base_currency: USD
 initial_capital: 100000.000000
-last_reconciled_at: 2026-08-08T04:55:00+08:00
-valuation_date: 2026-08-07
+last_reconciled_at: 2026-08-11T04:55:00+08:00
+valuation_date: 2026-08-10
 valuation_status: VERIFIED
-valuation_source: 2026-08-07 official regular-session closes, settled SAME NIGHT at T+~50min. 8/8 names verified by 2 independent settled sources, max cross-source spread 0.39% (limit 1%): GEV 990.11 / ETN 448.65 / ABT 107.81 / PWR 671.72 from Alpha Vantage GLOBAL_QUOTE (latest trading day = 2026-08-07), cross-checked by stockanalysis compare at 0.00–0.02%; MP 51.11 / BE 219.34 / KTOS 60.77 / MSFT 499.99 from stockanalysis "At close: Aug 7, 2026, 4:00 PM EDT" stamps (AV daily quota exhausted after 4 calls), cross-checked by stockscan.io settled daily rows (KTOS 0.00%, MSFT 0.13%, MP 0.24%, BE 0.39%). Prev-close anchors: all 8 equal the 2026-08-06 VERIFIED closes to the cent. Benchmarks SPY 773.26 / QQQ 723.03 / IWM 301.56 (stockanalysis ETF compare, cross-checked by the stockscan S&P 500 index tick +0.62% vs SPY +0.61%). VIX 15.30 and US10Y 4.676% are single-source (TradingEconomics, Aug/07 stamp) = PARTIAL (see data/post-close.md).
-prior_valuation_date: 2026-08-06 (superseded)
+valuation_source: 2026-08-10 official regular-session closes, settled SAME NIGHT at T+~40min. All 8 names verified by 2 independent approved sources, max cross-source spread 0.25% (limit 1%). Primary = stockanalysis.com detail-page "At close: Aug 10, 2026, 4:00 PM EDT" header with cache-buster; cross-checks = stockscan.io settled tape (PWR/GEV/ETN/NVDA) and roic.ai (MP/KTOS/MSFT/ABT). **Provisional-row trap recorded (new):** at T+40min the stockanalysis history table still carried Adj.Close="-" and lagged the header on PWR (664.36 vs 660.86) and ETN (446.69 vs 444.96); roic.ai carried the same stale snapshot. The header value reproduces prev_close +/- stated change to the cent on all 8 names and is backed by higher settled volume, so the header was taken as official. Alpha Vantage NOT usable tonight (account-level 25 req/day quota exhausted, rate_limit error). Benchmarks SPY 773.03 (-0.03%) / QQQ 720.87 (-0.30%) / IWM 299.98 (-0.52%); S&P 500 7,753.02 (-0.06%). **VIX 15.46 (+3.76%) VERIFIED 2-source** (cboe.com "Data as of 8:15 PM 8/10/2026", prev close 14.90; investing.com "Closed 16:14:46" 15.46, day range 15.10-15.72) - the PARTIAL flag carried since 8/7 is now closed. **US10Y 4.707% (+4.9bp) VERIFIED 2-source** (investing.com 16:35 real-time 4.707, prev close 4.658, day range 4.640-4.709; tradingeconomics 4.706) - PARTIAL closed. Market breadth NOT recorded: the only reachable provider was finviz.com, which is on BAD_SOURCES (P2 -> whole record void); stockanalysis/markets and barchart returned empty JS shells. Regime therefore classified on VIX + SPY vs MA50/MA200 only.
+prior_valuation_date: 2026-08-07 (superseded)
 
 ## Balances
 
 | item | USD |
 |---|---:|
-| cash | 24030.225125 |
-| GEV market value | 9789.670050 |
-| ETN market value | 11196.817174 |
-| ABT market value | 10383.392839 |
-| PWR market value | 10621.874774 |
-| MP market value | 11388.744651 |
-| BE market value | 5303.440285 |
-| KTOS market value | 12946.452407 |
-| MSFT market value | 10257.046855 |
-| total market value | 81887.439035 |
-| total assets | 105917.664159 |
-| cumulative P&L | 5917.664159 |
-| realized P&L | -969.774755 |
-| unrealized P&L | 6887.438915 |
-| position ratio | 77.312354% |
+| cash | 24037.782280 |
+| GEV market value | 9796.986768 |
+| ETN market value | 11104.727003 |
+| ABT market value | 10461.405530 |
+| PWR market value | 10450.146137 |
+| MP market value | 12179.784438 |
+| KTOS market value | 13297.968722 |
+| MSFT market value | 10381.569894 |
+| NVDA market value | 5144.308693 |
+| total market value | 82816.897185 |
+| total assets | 106854.679465 |
+| cumulative P&L | 6854.679465 |
+| realized P&L | -666.334470 |
+| unrealized P&L | 7521.013935 |
+| position ratio | 77.504231% |
 
 ## Position accounting
 
 | symbol | quantity | cost | cost basis | reference close | market value | unrealized P&L |
 |---|---:|---:|---:|---:|---:|---:|
-| GEV | 9.887457 | 1011.38 | 10000.000000 | 990.11 | 9789.670050 | -210.329950 |
-| ETN | 24.956686 | 400.69 | 10000.000000 | 448.65 | 11196.817174 | 1196.817174 |
-| ABT | 96.311964 | 103.83 | 10000.000000 | 107.81 | 10383.392839 | 383.392839 |
-| PWR | 15.812950 | 632.39 | 10000.000000 | 671.72 | 10621.874774 | 621.874774 |
-| MP | 222.828109 | 44.88 | 10000.000000 | 51.11 | 11388.744651 | 1388.744651 |
-| BE | 24.179084 | 206.79 | 5000.000000 | 219.34 | 5303.440285 | 303.440285 |
-| KTOS | 213.040191 | 46.94 | 10000.000000 | 60.77 | 12946.452407 | 2946.452407 |
-| MSFT | 20.514504 | 487.46 | 10000.000120 | 499.99 | 10257.046855 | 257.046735 |
+| GEV | 9.887457 | 1011.38 | 10000.000000 | 990.85 | 9796.986768 | -203.013232 |
+| ETN | 24.956686 | 400.69 | 10000.000000 | 444.96 | 11104.727003 | 1104.727003 |
+| ABT | 96.311964 | 103.83 | 10000.000000 | 108.62 | 10461.405530 | 461.405530 |
+| PWR | 15.812950 | 632.39 | 10000.000000 | 660.86 | 10450.146137 | 450.146137 |
+| MP | 222.828109 | 44.88 | 10000.000000 | 54.66 | 12179.784438 | 2179.784438 |
+| KTOS | 213.040191 | 46.94 | 10000.000000 | 62.42 | 13297.968722 | 3297.968722 |
+| MSFT | 20.514504 | 487.46 | 10000.000120 | 506.06 | 10381.569894 | 381.569774 |
+| NVDA | 23.646558 | 223.96 | 5295.883130 | 217.55 | 5144.308693 | -151.574437 |
 
 ## Validation
 
-`cash + market_value = 24030.225125 + 81887.439035 = 105917.664159`
+`cash + market_value = 24037.782280 + 82816.897185 = 106854.679465`
 
-`total_assets - initial_capital = 5917.664159`
+`total_assets - initial_capital = 6854.679465`
 
-`cash traceability (C2): 100000 - 75000.000120 + (-969.774755) = 24030.225125` ✓
+`cash traceability (C2): 100000 - 75295.883130 + (-666.334470) = 24037.782400` — stored cash 24037.782280, diff 0.000120 (the MSFT quantization carry), well inside the USD 0.05 tolerance ✓
 
-`cumulative = realized + unrealized (C6): -969.774755 + 6887.438915 = 5917.664159` ✓
+`cumulative = realized + unrealized (C6): -666.334470 + 7521.013935 = 6854.679465` ✓
 
-Accounting difference: `0.000000`, within the required USD 0.05 tolerance. C1–C7 revalidated after the 2026-08-07 BE take-profit halving. **BE now carries an explicit `SIZE_EXCEPTION` tag** (cost basis $5,000 = legitimate half position after a partial take-profit); every other position is exactly $10,000 (MSFT 10000.000120 = quantization only).
+Accounting difference within the required USD 0.05 tolerance. C1–C7 revalidated after the 2026-08-10 settlement (no trades booked). **NVDA carries an explicit `SIZE_EXCEPTION` tag** (cost basis $5,295.88 = ACT-007 high-beta halving of the $10k standard, beta 2.21); every other position is $10,000 (MSFT 10000.000120 = quantization only).
+
+**POST_CLOSE 2026-08-10 — settlement (no trades).** A flat-index, negative-rotation session (SPY −0.03% to 773.03; QQQ −0.30%; IWM −0.52%; S&P 500 7,753.02 −0.06%; VIX 14.90 → **15.46 +3.76%**, still < 16 → regime stays **RISK_ON**, ceiling 90%; US10Y 4.658% → **4.707%, +4.9bp**): total assets **105,917.66 → 106,854.68 (+937.02, +0.89%)**, beating SPY by **+0.91pp** — the book's largest relative-strength day of the month against a flat tape. Cumulative P&L **+5.92% → +6.85%, sixth consecutive all-time high**. 5/8 green — drivers (mv Δ): MP +791.04 (+6.95%, oversold bounce off the post-Q2 selloff; **no company catalyst — the only dated 8/10 item was Deutsche Bank cutting its target 61→58 while keeping Buy**, so this is sentiment/technical, not new information), KTOS +351.52 (+2.72%, 7th up day; MDA/JMSDF JFTE-01 flight-test role publicised — support work already performed, no new award, not financially material), MSFT +124.52 (+1.21%, Maia 300 in-house AI accelerator reported for a fall unveil + Bernstein PT 647→660), ABT +78.01 (+0.75%), GEV +7.32 (+0.07%, first day it did not underperform after 4 straight); ETN −92.09 (−0.82%), PWR −171.73 (−1.62%, giving back part of the 8/7 KeyBanc upgrade pop), NVDA −151.57 (−2.86%). Actions: **all 8 持有, no trades booked.** Signal adjudications: **KTOS 冲高衰竭 = NOT confirmed** (registered condition was close < today's low 58.90 or < prior-day low 56.25; actual close 62.42 sits in the top 83% of the 58.90–63.17 range **and volume contracted** 4.10M vs 4.79M → ACT-003 twin conditions unmet, CORE-004 forbids selling on the run-up alone); **MP ACT-003 = NOT confirmed** (condition close < 48.17 or < 52.66 on expanding volume; actual close 54.66 vs day low 52.66, near the high); **NVDA invalidation = NOT hit** (official close 217.55 vs the 200.75 line, +8.4% of headroom — the $500B AI-infrastructure financing consortium with Apollo/BlackRock/Blackstone/Brookfield/GS/KKR is a third-party capital vehicle, i.e. a capital-allocation and circularity debate, **not** an operating impairment, so ACT-002 has no fundamental leg). Regime **RISK_ON** (VIX 15.46 < 16; SPY 773.03 far above MA50 ~750 and MA200); position ratio **77.31% → 77.50%**, within the 90% ceiling; slots 8/8. Concentration registered: KTOS 12.44% of NAV (largest), MP 11.40% (second, up from 10.75%); the ai_power leg (GEV+PWR+ETN) is 29.34% of NAV. Carried forward unresolved: the ETN ex-dividend $27.45 cash inflow is still not modelled in C2 — **9th consecutive registration, still awaiting a user ruling, no unilateral model change made.**
+
+**MORNING 2026-08-08 (valuation 2026-08-07) — deterministic replacement executed (2 trades).** Second execution of the user-ruled replacement methodology. Nine-dim rescore of all 8 holdings: KTOS 88 / ETN 87 / MSFT 85 / MP 84 / PWR 83 / ABT 76 / GEV 73 / **BE 69 (weakest)**; full-market scan covered **8 candidates across 5 theses and 5 industries** (NVDA 82, AVGO 80, AMZN 78, LLY 76, MU 74, FSLR 72, PLTR 71, AMD 66). Top candidate **NVDA 82 vs BE 69 = +13 ≥ 5 gate**. All screen gates passed with 2-source-verified data (0.00% spread), which was precisely the blocker that stopped this same trade yesterday (Alpha Vantage quota exhaustion → ACT-001 data gate → no trade). **Sold BE 24.179084 sh @219.34** (trade 2026-08-07-BE-平仓-01), realized **+303.440285**; the position's lifetime realized total is +606.88 across the two-step exit. **Bought NVDA 23.646558 sh @223.96** (trade 2026-08-07-NVDA-建仓-01), cost basis 5,295.883130 (ACT-007 halved); planned invalidation official close < 200.75 (−10.36%, risk 0.52% NAV); no fixed take-profit (ACT-003 only). Cash 24,030.23 → 24,037.78; realized cum −969.77 → **−666.33**; total assets unchanged 105,917.66 (both legs at market); position ratio 77.31% → **77.31%**. Slots stay 8/8; thesis mix now ai_power 3 / defense 1 / rare_earth 1 / healthcare 1 / ai_software 1 / **ai_semis 1** — the ai_power leg falls from 34.85% to **29.84% of NAV**, reducing the book's largest structural concentration. Regime **RISK_ON** (VIX 14.90 2-source < 16; SPY 773.26 at a record close) → ceiling 90%, ratio well within. Carried forward unresolved: the ETN ex-dividend $27.45 cash inflow is still not modelled in C2 — **6th consecutive registration, still awaiting a user ruling, no unilateral model change made.**
 
 **POST_CLOSE 2026-08-07 — settlement + take-profit (1 trade booked).** Broad risk-on tape into the July payrolls print (SPY +0.61% to 773.26, a new closing high; QQQ +1.17%; IWM +1.11%; VIX 15.30 → regime stays **RISK_ON**, ceiling 90%; US10Y 4.676%): total assets **104,900.12 → 105,917.66 (+1,017.55, +0.97%)**, beating SPY by +0.36pp; cumulative P&L **+4.90% → +5.92%, fifth consecutive all-time high**. Drivers (mv Δ): MP +806.64 (+7.62%, Q2 beat gets its price confirmation — revenue $108.49M vs $95.95M consensus, adj EBITDA positive; Trump hosted mining CEOs on critical-minerals supply chains), KTOS +715.82 (+5.85%, Javelin next-gen seeker award follow-through; now the strongest position at +29.46%), PWR +61.35 (+0.58%), ETN +11.48 (+0.10%, **ex-dividend $1.10 today** and still closed green — no exhaustion), MSFT +2.67 (+0.03%); ABT −14.45 (−0.14%), GEV −100.75 (−1.02%, the only losing position, cumulative −2.10%), BE −465.21 (−4.20%). **BE 止盈-减仓50% executed** (trade 2026-08-07-BE-止盈减仓50-01): sold 24.179084 sh @ 219.34, realized **+303.44**. The trigger was the numeric condition registered the previous night (close < 222.59 or < 221.21) — both hit, on expanding volume (14.75M vs 11.84M) and after a failed spike to 240.18, so the three reasons that justified holding on 8/6 all reversed. Thesis intact → halved, not exited; remaining 24.179084 sh (+6.07%) held with a SIZE_EXCEPTION tag. Cash 18,726.78 → 24,030.23; realized cum −1,273.22 → −969.77; position ratio 82.32% → **77.31%**; slots stay 8/8. Accounting note carried forward (still awaiting a user ruling): the C2 identity does not model dividends, so ETN's $27.45 ex-div cash inflow is not booked — no model change was made unilaterally.
 
