@@ -1,7 +1,7 @@
 # Strategy Playbook
 
 VERSION: 2.1.1
-last_updated: 2026-08-10
+last_updated: 2026-08-11
 
 ## CORE
 
@@ -99,6 +99,16 @@ last_updated: 2026-08-10
   - Enabled: no (HYPOTHESIS only)
   - Source lesson: lessons.md#L-011
 
+- HYP-002 — New closing high on contracting volume (缩量新高)
+  - Environment: a position makes its highest close since entry
+  - Trigger: the new closing high is set on volume materially BELOW the prior session's volume (staged threshold: −25% or more)
+  - Proposed action impact: none by itself — it is a *quality-of-advance* marker, not an exit. Use it to (a) require the ACT-003 numeric exhaustion criterion to be tightened to the new session's low, and (b) reduce willingness to add to that name.
+  - Sample count: 2 staged 2026-08-11 (KTOS +2.10% to a new high on 2.74M vs 4.10M = −33%; ETN +3.22% to its highest close since entry on 1.81M, prior-session volume not captured — recorded as incomplete, must be filled before this counts as a second clean sample)
+  - Validation metric: names showing the pattern give back the new-high advance within the next 3 sessions more often than names making new highs on expanding volume; measured against each name's own theme peers
+  - Enabled: no (HYPOTHESIS only — 1 clean sample, needs ≥3 independent trading days)
+  - Source lesson: extends L-015 (numeric criteria over pattern impressions) — this deliberately does NOT create a discretionary exit, only a criterion-tightening input
+  - Explicit anti-overfit note: staged from a single session; if the next two occurrences do not show the give-back, mark REJECTED rather than loosening the definition.
+
 New hypotheses need at least three independent trading days or five relevant samples before promotion.
 
 ## REJECTED
@@ -106,6 +116,8 @@ New hypotheses need at least three independent trading days or five relevant sam
 None recorded.
 
 ## Change log
+
+- 2026-08-11 (no version bump, VERSION stays 2.1.1) — **Settlement + one staged hypothesis.** No CORE/ACT threshold or rule changed; no trades booked. Two intraday pending flags resolved as 未确认 (MP 收盘 55.24 远高于 52.66 判据；LLY 收盘 1215.02 高于 1185.71 突破失败线). Added **HYP-002 缩量新高** (not enabled, 1 clean sample) and registered ETN's first numeric exhaustion criterion. Separately, a real defect was fixed outside the playbook: `integrity.CheckResult` could not construct non-numeric expected/actual, so the **P4/P5 provenance guards had zero detection power** — fixed and locked by a new selftest assertion, and `stockscan.io` was given the `stamp_check` quirk after it served late-July tape for 5 of 8 names today (L-022).
 
 - 2026-08-10 (no version bump, VERSION stays 2.1.1) — **Settlement-only maintenance.** No CORE/ACT threshold or rule changed; no trades booked. Two new lessons recorded in `knowledge/lessons.md` but deliberately NOT promoted to rules (1 sample each, below the >=3 independent trading days / 5 samples bar): **L-017** settlement pricing must first pass a same-source self-consistency check (quote header reproducible from prev close +/- stated change; history row finalised; full-day volume) before cross-source comparison — on 8/10 the stockanalysis quote header and its own provisional history row disagreed on PWR (660.86 vs 664.36) and ETN (444.96 vs 446.69) and roic.ai copied the same mid-session snapshot, so a naive "two sites agree" test would have booked PWR 1.1% wrong; **L-018** any single-day holding move >=5% must have its driving fact named in the review, or be explicitly logged as an information-free move — MP rose 6.95% on a day whose only dated company item was a Deutsche Bank target cut 61->58. **L-019** proxy-cost positions must be excluded from the entry-timing score used to judge method effectiveness (MP B+ and GEV D share the same 7/16-close proxy origin). HYP-001 unchanged (no new sample).
 

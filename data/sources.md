@@ -8,7 +8,7 @@
 
 | 指标 | 核准源 | 使用要点 |
 |---|---|---|
-| equity_close（个股/ETF 正式收盘与历史） | stockanalysis.com ｜ roic.ai ｜ stocktitan.net ｜ stockscan.io | stockanalysis **必须带缓存参数** `?v=`（实测无参给数周旧缓存）；stocktitan **必须核对 Last updated**（按标的冻结）；roic 注意区分盘后价 |
+| equity_close（个股/ETF 正式收盘与历史） | stockanalysis.com ｜ roic.ai ｜ stocktitan.net ｜ stockscan.io | stockanalysis **必须带缓存参数** `?v=`（实测无参给数周旧缓存）；stocktitan **必须核对 Last updated**（按标的冻结）；roic 注意区分盘后价；**stockscan.io 自 2026-08-11 起同样必须核对日期戳**（当日对 MSFT/ETN/ABT/NVDA/LLY 返回 7 月下旬旧行情、对 KTOS 却是定稿值，按标的冻结，L-022） |
 | vix | cboe.com（发行方） ｜ investing.com ｜ google.com/finance ｜ tradingeconomics.com | cboe 必须带缓存参数（曾给六月快照）；investing **仅指数页可用**，其个股报价页陈旧、禁用于 equity_close |
 | us10y | investing.com ｜ cboe.com（^TNX） ｜ tradingeconomics.com ｜ etftrends.com | 多源常差 1bp 内，取两源一致值 |
 | breadth（市场宽度） | stockanalysis.com/markets | 环境分类用、非交易门槛；允许单源但须内部标注 |

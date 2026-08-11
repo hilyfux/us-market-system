@@ -700,6 +700,17 @@ def test_data_layer():
     check("stocktitan 标记 stamp_check（与 STAMP_CHECK_REQUIRED 一致）",
           eq["stocktitan.net"].get("stamp_check") is True
           and "stocktitan.net" in ig.STAMP_CHECK_REQUIRED)
+    # 2026-08-11 实测：stockscan.io 对 5/8 标的返回 7 月下旬旧行情（按标的冻结），
+    # 与 stocktitan 同类；若无 stamp 核对会把陈旧价当官方收盘入账（L-022）。
+    check("stockscan 标记 stamp_check（与 STAMP_CHECK_REQUIRED 一致）",
+          eq["stockscan.io"].get("stamp_check") is True
+          and "stockscan.io" in ig.STAMP_CHECK_REQUIRED)
+    # 该 quirk 必须真的有检出力：无 stamp 时 P5 必须报出来
+    _pr = ig.PriceRecord("XYZ", "2026-08-11", "10.00",
+                         [{"domain": "stockanalysis.com", "figure": "10.00", "url": "https://x/?v=1"},
+                          {"domain": "stockscan.io", "figure": "10.00", "url": "https://y"}])
+    _p5 = [r for r in _pr.validate() if r.name.startswith("P5") and "stockscan.io" in r.name]
+    check("P5 对无 stamp 的 stockscan.io 有检出力", len(_p5) == 1 and not _p5[0].passed)
     # 4) 文档同步：sources.md 必须包含每个核准域名与每个黑名单域名
     doc_p = os.path.join(os.path.dirname(HERE_DIR), "data", "sources.md")
     if os.path.exists(doc_p):

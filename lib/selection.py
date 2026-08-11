@@ -21,6 +21,9 @@ THEME_TAGS: Dict[str, str] = {
     # 2026-08-08 MORNING 注册：AI 算力芯片是与 ai_power（发电/输配电）、ai_software（云与应用）
     # 不同的产业链环节与驱动因子，按 L-009「论题而非 GICS」口径单列。
     "NVDA": "ai_semis", "AVGO": "ai_semis",
+    # 2026-08-11 MORNING 注册：LLY 与 ABT 同属 healthcare 论题（器械 vs 制药同为医疗支付/监管
+    # 驱动，按 L-009「论题而非 GICS」口径合并计集中度，避免两只医疗仓被当成互不相关的敞口）。
+    "LLY": "healthcare",
 }
 
 BASE_INITIAL_PCT = Decimal("10")   # ACT-004：单只新仓初始 = NAV 的 10%（= $10,000 @ $100k），

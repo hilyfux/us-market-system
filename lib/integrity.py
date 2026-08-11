@@ -16,7 +16,7 @@ integrity — 有检出力的账务校验、陈旧度看门狗、行情溯源
     C5 成本一致   每仓 unrealized == market_value - cost_basis
 """
 from datetime import date, datetime
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from typing import Dict, List, Optional, Sequence
 
 TOLERANCE = Decimal("0.05")   # USD
@@ -34,7 +34,16 @@ class CheckResult(object):
         self.passed = bool(passed)
         self.expected = expected
         self.actual = actual
-        self.diff = (D(actual) - D(expected)) if (expected is not None and actual is not None) else None
+        # 非数值的 expected/actual（如 P4/P5 的 "stamp" / "缺失"）不参与差值计算。
+        # 2026-08-11 发现：旧实现无条件 D()，使 P4/P5 一被触发就抛 InvalidOperation ——
+        # 两个溯源守卫因此从未真正可用（L-007 类缺陷：检查存在但检不出东西）。
+        if expected is not None and actual is not None:
+            try:
+                self.diff = D(actual) - D(expected)
+            except (InvalidOperation, ValueError, TypeError):
+                self.diff = None
+        else:
+            self.diff = None
         self.detail = detail
         self.severity = severity
 
@@ -228,7 +237,8 @@ APPROVED_SOURCES = {
         "roic.ai": {"note": "ABT 实测含盘后价，取正式收盘字段"},
         "stocktitan.net": {"stamp_check": True,
                            "note": "按标的冻结；必须核对 Last updated（GEV 页曾滞留一个月）"},
-        "stockscan.io": {},
+        "stockscan.io": {"stamp_check": True,
+                         "note": "2026-08-11 实测：同一时刻对 MSFT/ETN/ABT/NVDA/LLY 返回 7 月下旬旧行情（站内指数条也停在旧值），KTOS 却是当日定稿——按标的冻结，与 stocktitan 同类。必须核对该页自身的日期戳/前收盘是否等于我方记录的上一交易日收盘，不一致即弃用该源"},
     },
     "vix": {                    # 波动率指数
         "cboe.com": {"cache_buster": True, "note": "发行方；cdn.cboe.com 无缓存参数曾给六月快照"},
@@ -265,7 +275,7 @@ BAD_SOURCES = {
     "home.treasury.gov": "所有端点均截断",
 }
 CACHE_BUSTER_REQUIRED = ("stockanalysis.com", "cdn.cboe.com")
-STAMP_CHECK_REQUIRED = ("stocktitan.net",)
+STAMP_CHECK_REQUIRED = ("stocktitan.net", "stockscan.io")
 MAX_CROSS_SOURCE_PCT = Decimal("1.0")
 
 
