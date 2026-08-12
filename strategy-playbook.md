@@ -1,7 +1,7 @@
 # Strategy Playbook
 
 VERSION: 2.1.1
-last_updated: 2026-08-11
+last_updated: 2026-08-12
 
 ## CORE
 
@@ -117,6 +117,7 @@ None recorded.
 
 ## Change log
 
+- 2026-08-12 (no version bump, VERSION stays 2.1.1) — **Settlement only, no trades.** No CORE/ACT rule changed. All four registered close criteria adjudicated 未确认 with room (LLY 1220.28 vs 1185.71; LNG 268.11 vs 265.16 after an intraday breach to 262.01 — first clean intraday-breach-then-close-recovery sample supporting close-confirmed exits; MP 54.11 vs 52.90; KTOS 63.82 — 4th consecutive falsification of the exhaustion registration). **HYP-002 (缩量新高) clean-sample count stays 1**: today's marginal new high came on volume expanding 23%, the opposite shape, so it is not a sample. HYP-001 unchanged (HYPOTHESIS, lowered confidence).
 - 2026-08-11 (no version bump, VERSION stays 2.1.1) — **Settlement + one staged hypothesis.** No CORE/ACT threshold or rule changed; no trades booked. Two intraday pending flags resolved as 未确认 (MP 收盘 55.24 远高于 52.66 判据；LLY 收盘 1215.02 高于 1185.71 突破失败线). Added **HYP-002 缩量新高** (not enabled, 1 clean sample) and registered ETN's first numeric exhaustion criterion. Separately, a real defect was fixed outside the playbook: `integrity.CheckResult` could not construct non-numeric expected/actual, so the **P4/P5 provenance guards had zero detection power** — fixed and locked by a new selftest assertion, and `stockscan.io` was given the `stamp_check` quirk after it served late-July tape for 5 of 8 names today (L-022).
 
 - 2026-08-10 (no version bump, VERSION stays 2.1.1) — **Settlement-only maintenance.** No CORE/ACT threshold or rule changed; no trades booked. Two new lessons recorded in `knowledge/lessons.md` but deliberately NOT promoted to rules (1 sample each, below the >=3 independent trading days / 5 samples bar): **L-017** settlement pricing must first pass a same-source self-consistency check (quote header reproducible from prev close +/- stated change; history row finalised; full-day volume) before cross-source comparison — on 8/10 the stockanalysis quote header and its own provisional history row disagreed on PWR (660.86 vs 664.36) and ETN (444.96 vs 446.69) and roic.ai copied the same mid-session snapshot, so a naive "two sites agree" test would have booked PWR 1.1% wrong; **L-018** any single-day holding move >=5% must have its driving fact named in the review, or be explicitly logged as an information-free move — MP rose 6.95% on a day whose only dated company item was a Deutsche Bank target cut 61->58. **L-019** proxy-cost positions must be excluded from the entry-timing score used to judge method effectiveness (MP B+ and GEV D share the same 7/16-close proxy origin). HYP-001 unchanged (no new sample).

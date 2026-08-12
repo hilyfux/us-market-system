@@ -24,6 +24,9 @@ THEME_TAGS: Dict[str, str] = {
     # 2026-08-11 MORNING 注册：LLY 与 ABT 同属 healthcare 论题（器械 vs 制药同为医疗支付/监管
     # 驱动，按 L-009「论题而非 GICS」口径合并计集中度，避免两只医疗仓被当成互不相关的敞口）。
     "LLY": "healthcare",
+    # 2026-08-12 MORNING 注册：LNG（Cheniere）驱动因子是美国 LNG 出口产能与全球天然气
+    # 运输/价差，与本簿现有 AI 电力/半导体/医疗/国防/稀土五条论题均无共同驱动，单列。
+    "LNG": "lng_export",
 }
 
 BASE_INITIAL_PCT = Decimal("10")   # ACT-004：单只新仓初始 = NAV 的 10%（= $10,000 @ $100k），
