@@ -3,56 +3,58 @@
 schema_version: 2.0
 base_currency: USD
 initial_capital: 100000.000000
-last_reconciled_at: 2026-08-13T04:52:00+08:00
-valuation_date: 2026-08-12
+last_reconciled_at: 2026-08-14T04:56:00+08:00
+valuation_date: 2026-08-13
 valuation_status: VERIFIED
-valuation_source: 2026-08-12 official regular-session closes, settled SAME NIGHT at T+~35min. Primary = stockanalysis.com detail page, header stamped "At close: Aug 12, 2026, 4:00 PM EDT", cache-buster on every request (L-021). Same-source self-consistency verified first (L-017): prev_close + change == close for 8/8 names, and each prev_close equals our recorded 8/11 close. Second source: Alpha Vantage GLOBAL_QUOTE (free-tier quota reset tonight; latest trading day=2026-08-12 for all 8 names); max cross-source spread 0.046% (MP) < 1% limit.
-prior_valuation_date: 2026-08-11 (superseded)
+valuation_source: 2026-08-13 official regular-session closes, settled SAME NIGHT at T+~45min. Primary = stockanalysis.com detail page, header stamped "At close: Aug 13, 2026, 4:00 PM EDT", cache-buster on every request (L-021). Same-source self-consistency verified first (L-017): prev_close + change == close for 8/8 names, and each prev_close equals our recorded 8/12 close. Second source: Alpha Vantage GLOBAL_QUOTE (latest trading day=2026-08-13 for all 8 names); max cross-source spread 0.054% (MP) < 1% limit.
+prior_valuation_date: 2026-08-12 (superseded)
 
 ## Balances
 
 | item | USD |
 |---|---:|
 | cash | 18977.896086 |
-| LLY market value | 9905.351998 |
-| ETN market value | 11479.077293 |
-| ABT market value | 10681.959927 |
-| PWR market value | 10721.496359 |
-| MP market value | 12057.228978 |
-| KTOS market value | 13596.224990 |
-| MSFT market value | 10101.957205 |
-| LNG market value | 10100.968107 |
-| total market value | 88644.264856 |
-| total assets | 107622.160942 |
-| cumulative P&L | 7622.160942 |
+| LLY market value | 9813.789102 |
+| ETN market value | 11313.614464 |
+| ABT market value | 10716.632234 |
+| PWR market value | 10638.636501 |
+| MP market value | 12402.612547 |
+| KTOS market value | 13376.793593 |
+| MSFT market value | 10193.246748 |
+| LNG market value | 10039.558320 |
+| total market value | 88494.883509 |
+| total assets | 107472.779595 |
+| cumulative P&L | 7472.779595 |
 | realized P&L | -1022.104467 |
-| unrealized P&L | 8644.264868 |
-| position ratio | 82.366182% |
+| unrealized P&L | 8494.883521 |
+| position ratio | 82.341672% |
 
 ## Position accounting
 
 | symbol | quantity | cost | cost basis | reference close | market value | unrealized P&L |
 |---|---:|---:|---:|---:|---:|---:|
-| LLY | 8.117278 | 1231.94 | 10000.000000 | 1220.28 | 9905.351998 | -94.648002 |
-| ETN | 24.956686 | 400.69 | 10000.000000 | 459.96 | 11479.077293 | 1479.077293 |
-| ABT | 96.311964 | 103.83 | 10000.000000 | 110.91 | 10681.959927 | 681.959927 |
-| PWR | 15.812950 | 632.39 | 10000.000000 | 678.02 | 10721.496359 | 721.496359 |
-| MP | 222.828109 | 44.88 | 10000.000000 | 54.11 | 12057.228978 | 2057.228978 |
-| KTOS | 213.040191 | 46.94 | 10000.000000 | 63.82 | 13596.224990 | 3596.224990 |
-| MSFT | 20.514504 | 487.46 | 10000.000120 | 492.43 | 10101.957205 | 101.957085 |
-| LNG | 37.674716 | 265.43 | 9999.999868 | 268.11 | 10100.968107 | 100.968239 |
+| LLY | 8.117278 | 1231.94 | 10000.000000 | 1209.00 | 9813.789102 | -186.210898 |
+| ETN | 24.956686 | 400.69 | 10000.000000 | 453.33 | 11313.614464 | 1313.614464 |
+| ABT | 96.311964 | 103.83 | 10000.000000 | 111.27 | 10716.632234 | 716.632234 |
+| PWR | 15.812950 | 632.39 | 10000.000000 | 672.78 | 10638.636501 | 638.636501 |
+| MP | 222.828109 | 44.88 | 10000.000000 | 55.66 | 12402.612547 | 2402.612547 |
+| KTOS | 213.040191 | 46.94 | 10000.000000 | 62.79 | 13376.793593 | 3376.793593 |
+| MSFT | 20.514504 | 487.46 | 10000.000120 | 496.88 | 10193.246748 | 193.246628 |
+| LNG | 37.674716 | 265.43 | 9999.999868 | 266.48 | 10039.558320 | 39.558452 |
 
 ## Validation
 
-`cash + market_value = 18977.896086 + 88644.264856 = 107622.160942`
+`cash + market_value = 18977.896086 + 88494.883509 = 107472.779595`
 
-`total_assets - initial_capital = 7622.160942 (+7.6222%)`
+`total_assets - initial_capital = 7472.779595 (+7.4728%)`
 
 `cash traceability (C2): 100000 - 79999.999988 + (-1022.104467) = 18977.895545` — stored cash 18977.896086, diff 0.000541 (MSFT + LLY + LNG quantization carries), well inside the USD 0.05 tolerance ✓
 
-`cumulative = realized + unrealized (C6): -1022.104467 + 8644.264868 = 7622.160401` vs stored 7622.160942, diff 0.000541 ✓
+`cumulative = realized + unrealized (C6): -1022.104467 + 8494.883521 = 7472.779054` vs stored 7472.779595, diff 0.000541 ✓
 
 Accounting difference within the required USD 0.05 tolerance. C1–C7 revalidated at the 2026-08-12 MORNING replacement (2 trades booked). **With NVDA closed, the book carries NO `SIZE_EXCEPTION`** — all 8 positions are back at the uniform $10,000 cost basis (LNG beta −0.01 is not high-beta, so ACT-007 halving does not apply).
+
+**POST_CLOSE 2026-08-13 — settlement (no trades).** Record-high index day the book did not keep up with: SPY +0.70% to 777.88 (new closing high, intraday 779.37 = new 52-wk high), QQQ +1.16%, IWM +0.26%; VIX 14.55 -> **14.63 (+0.55%)** < 16 -> regime stays **RISK_ON**, ceiling 90% (position ratio 82.34%, not binding). US10Y: official daily series lags (8/11 = 4.70%); no verified 8/13 close - recorded as a gap, not booked. Book **-0.14%** (107,622.160942 -> **107,472.779595**, -149.38) vs SPY +0.70% -> **-0.84pp**, second consecutive underperformance day; cumulative **+7,472.78 (+7.47%)**. Three of eight up - MP +2.86% (mv +345.38, day's best, recovering both pullback days; no dated company fact), MSFT +0.90% (mv +91.29, the two-day against-tape slide ended, the 8/12-registered weakest-candidate review condition <491.52 is moot), ABT +0.32% (third consecutive up day) - against five decliners led by KTOS -1.61% (mv -219.43) and ETN -1.44% (mv -165.46) as the power/industrial complex lagged a QQQ-led tape. **Both intraday flags adjudicated, no trades:** ETN closed **453.33 < 459.03**, the registered review line — ACT-003 exhaustion review finds the price leg met but the volume leg absent (1.14M, **31% below** 8/12's 1.64M; the preserved two-day <446.50-with-volume reduction criterion untouched, +1.53% above; the fade also has a sector explanation, PWR down the same day) -> **hold**, next-day line tightened to official close < **452.50** (8/13 low) with expanding volume; KTOS breached 62.10 intraday (low 61.84) and **recovered to close 62.79** on volume contracting 24% (2.56M vs 3.38M) -> 5th consecutive falsification of the exhaustion registration, and the **second clean intraday-breach-then-close-recovery sample** (after LNG 8/12) supporting close-confirmed exits; next-day lines move to <61.84 / <61.34-with-volume. LLY fell -0.92% on volume **expanding 25%** (1.90M vs 1.52M) - the first expanding-volume decline since entry, registered as a negative quality marker (breakout-failure line 1185.71 still +1.94% below the close; **8/14 ex-div $1.73**, tomorrow's adjudication must correct for it). LNG -0.61%, held 265 (first-breach line 262.01 untouched). C1-C7 all pass (C1/C3-C5 diff = 0; C2/C6 diff = 0.000541 quantization carry); W1 staleness **0**. Prices: stockanalysis "At close: Aug 13, 2026, 4:00 PM EDT" headers with cache-busters, 8/8 self-consistent, every prev_close equal to our 8/12 book; second source Alpha Vantage GLOBAL_QUOTE (all 8 stamped 2026-08-13), max spread 0.054% (MP).
 
 **POST_CLOSE 2026-08-12 — settlement (no trades).** July-CPI day, in-line print (headline 3.4% YoY, core 2.5%): indices modestly up (SPY +0.25% to 772.47; QQQ +0.73%; IWM +0.56%), VIX 15.29 → **14.55 (−4.8%)** < 16 → regime stays **RISK_ON**, ceiling 90% (position ratio 82.37%, not binding). US10Y: official daily series lags (8/10 = 4.72%); intraday reads ~4.66–4.69% — recorded as a gap, not booked. Book **−0.07%** (107,695.592457 → **107,622.160942**, −73.43) vs SPY +0.25% → **−0.32pp**, the first daily underperformance since the 8/11 replacement pair; cumulative **+7,622.16 (+7.62%)**. Six of eight up — PWR +1.11% (faded from 695.51), ABT +1.08% (second strong day), LNG +1.01%, LLY +0.43%, ETN +0.15%, KTOS +0.14% — but the two decliners outweighed them in dollars: MSFT −2.26% (mv −233.46, second consecutive against-tape slide on rising volume 27.3M, no company impairment — the software-vs-chips seesaw day, SOX +2.49%) and MP −2.05% (mv −251.80, second pullback day, low 53.50 held). **No trades booked — all four registered close criteria held with room:** LLY closed **1220.28**, +2.91% above the 1185.71 breakout-failure line (intraday low 1191.08 came within 0.45% before recovering); LNG closed **268.11**, above the 265.16 first-breach line it had violated intraday (low 262.01) — an intraday-breach-then-close-recovery sample that vindicates close-confirmed exits; MP closed **54.11** vs the 52.90 line (+2.29%); KTOS closed **63.82**, a marginal new run high on volume **expanding 23%** (3.38M vs 2.74M) — the opposite of the HYP-002 shrinking-volume pattern, so its clean-sample count stays 1. ETN printed a new 52-week intraday high **478.00** then faded to close +0.15% near the day low — no numeric trigger (459.96 ≫ 446.50), but a next-day criterion was registered at **close < 459.03**. Company facts today: LLY sued six black-market retatrutide sellers (moat defense, thesis-supportive); ABT's Big Ten blood-drive PR is marketing, not financial; MP presented at Canaccord (scheduled, no new guidance). C1–C7 all pass (C1/C3–C5 diff = 0; C2/C6 diff = 0.000541 quantization carry); W1 staleness **0**. Prices: stockanalysis "At close: Aug 12, 2026, 4:00 PM EDT" headers with cache-busters, 8/8 self-consistent, every prev_close equal to our 8/11 book; second source Alpha Vantage GLOBAL_QUOTE (quota reset, all 8 stamped 2026-08-12), max spread 0.046%.
 

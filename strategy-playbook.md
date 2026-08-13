@@ -1,7 +1,7 @@
 # Strategy Playbook
 
 VERSION: 2.1.1
-last_updated: 2026-08-12
+last_updated: 2026-08-13
 
 ## CORE
 
@@ -117,6 +117,7 @@ None recorded.
 
 ## Change log
 
+- 2026-08-13 (no version bump, VERSION stays 2.1.1) — **Settlement only, no trades.** No CORE/ACT rule changed. Both intraday flags adjudicated at the close: **ETN** hit its registered review line (453.33 < 459.03) but the ACT-003 volume leg was absent (volume −31%) and the preserved 446.50 two-day reduction criterion was untouched → hold, with the next-day line tightened to 452.50-with-volume — the registered criteria ladder was followed rather than a pattern impression (L-015). **KTOS** breached 62.10 intraday (low 61.84) and recovered to close 62.79 on −24% volume → **5th consecutive falsification** of the exhaustion registration and the **second clean intraday-breach-then-close-recovery sample** (after LNG 8/12) — accumulating direct evidence for close-confirmed exits (ACT-002/003). **HYP-002 (缩量新高)**: no new clean sample today (LLY's expanding-volume decline is the opposite shape on the downside; the KTOS 8/11 sample's 3-session give-back window closes at the 8/14 close — adjudicate then); clean-sample count stays 1. HYP-001 unchanged (HYPOTHESIS, lowered confidence).
 - 2026-08-12 (no version bump, VERSION stays 2.1.1) — **Settlement only, no trades.** No CORE/ACT rule changed. All four registered close criteria adjudicated 未确认 with room (LLY 1220.28 vs 1185.71; LNG 268.11 vs 265.16 after an intraday breach to 262.01 — first clean intraday-breach-then-close-recovery sample supporting close-confirmed exits; MP 54.11 vs 52.90; KTOS 63.82 — 4th consecutive falsification of the exhaustion registration). **HYP-002 (缩量新高) clean-sample count stays 1**: today's marginal new high came on volume expanding 23%, the opposite shape, so it is not a sample. HYP-001 unchanged (HYPOTHESIS, lowered confidence).
 - 2026-08-11 (no version bump, VERSION stays 2.1.1) — **Settlement + one staged hypothesis.** No CORE/ACT threshold or rule changed; no trades booked. Two intraday pending flags resolved as 未确认 (MP 收盘 55.24 远高于 52.66 判据；LLY 收盘 1215.02 高于 1185.71 突破失败线). Added **HYP-002 缩量新高** (not enabled, 1 clean sample) and registered ETN's first numeric exhaustion criterion. Separately, a real defect was fixed outside the playbook: `integrity.CheckResult` could not construct non-numeric expected/actual, so the **P4/P5 provenance guards had zero detection power** — fixed and locked by a new selftest assertion, and `stockscan.io` was given the `stamp_check` quirk after it served late-July tape for 5 of 8 names today (L-022).
 
