@@ -74,7 +74,12 @@ def validate_accounting(wallet: Dict[str, object], positions: Sequence[Dict[str,
     realized = D(wallet.get("realized_pnl", 0))
     init = D(initial_capital)
 
-    # C1 市值重算：从股数与收盘价独立重算，不信任存储值
+    # C1 市值重算：从股数与收盘价独立重算，不信任存储值。
+    # valuation 入力口径注记：この last_close（mark-to-market 入力）は **公式收盘价**——
+    # mark-to-market・NAV は公式收盘で評価し POST_CLOSE が更新する（従来どおり）。
+    # C1 は sum(qty×price)==stored_mv の恒等成立を検証するだけで **price ラベル不問**（C1 は不変）。
+    # T-20min価は CLOSING の**约定フィル価格・保有成本の由来にのみ**用い、valuation には用いない
+    # （2026-08-17 の口径統一で valuation まで T-20min化したが過剰と裁定され差し戻し；SYSTEM.md §4.3）。
     recomputed = sum((D(p["quantity"]) * D(p["last_close"])).quantize(Decimal("0.000001"))
                      for p in positions) if positions else Decimal(0)
     res.append(CheckResult(
@@ -254,6 +259,21 @@ APPROVED_SOURCES = {
     },
     "breadth": {                # 市场宽度（环境分类用，非交易门槛，允许单源+标注）
         "stockanalysis.com": {"cache_buster": True, "note": "markets 页；单源可用但须在内部记录标注"},
+    },
+    # closing_window_price（T-20min価＝引け20分前の盤中価，CLOSING約定フィル専用）：用途を厳密限定
+    # （2026-08-17 用户裁定）。この盤中価は **CLOSING で約定した取引のフィル価格と、それに由来する
+    # 保有成本（コスト基準）にのみ**用いる。取得口径＝**≥2 核准源・偏差≤1%・盤中タイムスタンプ**。
+    # 盤中価ゆえ「At close／Adj.Close 定稿／全日出来高」は**要求しない**（≥2源の安全要件 L-004 は保持）。
+    # **評価（mark-to-market・NAV）・離場判定・分析・戦略レビュー・データ門の取価には用いない**——
+    # これらは全て equity_close（正式收盘、POST_CLOSE で更新/検証）。当初 addendum は本価格を全会计書込・
+    # 評価・データ門・離場まで拡大したが過剰と裁定され差し戻し。TRADE_GATING_METRICS には**入れない**
+    # （runtime の収盘取得フローと混同しないため；≥2核准源可满足性は test_price_convention が机器保证）。
+    "closing_window_price": {
+        "stockanalysis.com": {"cache_buster": True,
+                              "note": "报价头の盤中価（Market open 時）を CLOSING約定フィル価格（T-20min価）に用いる；缓存参数必须"},
+        "roic.ai": {"note": "盘中报价字段を用いる（At close ではなく現在値）"},
+        "stocktitan.net": {"note": "盘中现价；≥2源の一つ"},
+        "stockscan.io": {"note": "盘中现价；≥2源の一つ"},
     },
 }
 TRADE_GATING_METRICS = ("equity_close", "vix", "us10y")

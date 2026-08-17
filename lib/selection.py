@@ -27,14 +27,48 @@ THEME_TAGS: Dict[str, str] = {
     # 2026-08-12 MORNING 注册：LNG（Cheniere）驱动因子是美国 LNG 出口产能与全球天然气
     # 运输/价差，与本簿现有 AI 电力/半导体/医疗/国防/稀土五条论题均无共同驱动，单列。
     "LNG": "lng_export",
+    # 2026-08-15 MORNING 注册（估值 2026-08-14）：TSM 与 NVDA/AVGO 同属 AI 算力芯片
+    # 产业链环节（代工端），按 L-009「论题而非 GICS」口径并入 ai_semis 合并计集中度。
+    "TSM": "ai_semis",
 }
 
 BASE_INITIAL_PCT = Decimal("10")   # ACT-004：单只新仓初始 = NAV 的 10%（= $10,000 @ $100k），
                                    # 比例制（随 NAV 缩放）、更均衡（用户 2026-07-31）。高 beta 经 ACT-007 折半。
-REPLACEMENT_MARGIN = Decimal("5")  # ACT-004 替换门：候选总分须高于最弱持仓 ≥5 分（确定性显著更高）。
+REPLACEMENT_MARGIN = Decimal("15")  # ACT-004 替换门（用户 2026-08-15 裁定：5 -> 15）。
+                                    # 实证：8/05–8/14 五次替换，可测四次全部劣后（-1.2/-2.0/-5.4/-11.5pp），
+                                    # 且分差与结果无相关（+17 的 RMBS→MSFT 劣后 2.0pp，+12 的 GEV→LLY 劣后 11.5pp）。
+                                    # 提高阈值只减少频次、不修正根因；根因由 ACT-008/009 两门处理。
+                                    # ⚠ 数值地位 = HYPOTHESIS（2026-08-15 降格，SYSTEM.md §4.2 / playbook HYP-003）：
+                                    #   「15」这个数选自 4 个观测的噪声，无统计根据——与 ACT-009 的结构性结论
+                                    #   （价格派生维度不得参与排序，来自根因分析）根据强度不同。行为不变（照旧强制），
+                                    #   裁定条件＝replacement claim 裁定满 20 件时的记分卡（learning.scorecard）。
 THEME_CAP_PCT = Decimal("25")      # ACT-006：同论题合并敞口上限（占 NAV）
 EVENT_BLACKOUT_SESSIONS = 5        # ACT-005：二元催化前禁新建的交易日数
 HIGH_BETA_SIZE_FACTOR = Decimal("0.5")  # ACT-007：高 beta 名义仓位折半
+
+# ---- ACT-008 最低持有期（用户 2026-08-15 裁定）----------------------------------
+# 买入理由是多年期论点，卖出理由却是 5 日内价格 —— 两个时间轴不一致是结构性缺陷，
+# 与样本量无关。实测：LLY 持有 5 个交易日、NVDA 3 个交易日即被相对分排序卖出，
+# 五次退出**没有一次**由失效线触发（LLY 失效线 1113.95 未触及、卖价 1180.16）。
+MIN_HOLDING_SESSIONS = 15          # 建仓后 N 个交易日内禁止「相对分排序」卖出。
+                                   # 失效线/止损（ACT-002/003）不受本门约束——风险管理始终优先。
+                                   # ⚠ 数值地位 = HYPOTHESIS（2026-08-15 降格，SYSTEM.md §4.2 / playbook HYP-003）：
+                                   #   「必须有最低持有期」是结构性结论（时间轴不一致，根因分析所得，不降格）；
+                                   #   「15」这个具体天数是在 4 个观测的噪声上选定的，无统计根据。行为不变，
+                                   #   裁定条件＝replacement claim 裁定满 20 件时的记分卡（learning.scorecard）。
+
+# ---- ACT-009 替换评分只用论点维度（用户 2026-08-15 裁定）------------------------
+# 九维里技术面/指标是价格派生的，会让「刚下跌的仓」自动落到最弱位，
+# 于是机械地「卖弱买强」，与长期持有相反。四次被卖出的标的全部在数日内反弹即其后果。
+# 价格维度保留在**离场判定**侧（ACT-002/003 失效线），不参与替换排序。
+THESIS_SCORE_DIMS = ("信息调研", "基本面", "事件驱动", "产业链", "财报", "情绪", "全球局势")
+PRICE_SCORE_DIMS = ("技术面", "指标")
+
+# ---- 替换冻结（用户 2026-08-15 裁定）-------------------------------------------
+# 8/26 NVDA 决算 + GEV/LLY 卖出后追踪が出るまで新規入れ替えを停止。
+REPLACEMENT_FROZEN = True
+REPLACEMENT_FREEZE_REASON = ("用户 2026-08-15 裁定：替换方法论待验证期。"
+                             "解冻条件＝8/26 NVDA 财报回填 + GEV/LLY/NVDA 卖出后相对表现入档（L-020）")
 
 
 def event_timing_gate(sessions_until_earnings: Optional[int],
@@ -85,20 +119,72 @@ def volatility_scaled_size(base_pct: Decimal, is_high_beta: bool,
     return (base_pct * factor) if is_high_beta else base_pct
 
 
+def thesis_score(dim_scores: Dict[str, object]) -> Decimal:
+    """
+    ACT-009：从九维打分里取**论点维度**之和，作为替换排序的唯一依据。
+
+    dim_scores 必须是九维全集（缺维 = 打分未完成，拒绝）；技术面/指标照常打分并记录，
+    但不进入本函数返回值——它们只在离场判定（ACT-002/003 失效线）侧使用。
+    """
+    missing = [d for d in THESIS_SCORE_DIMS + PRICE_SCORE_DIMS if d not in dim_scores]
+    if missing:
+        raise ValueError("九维打分不完整，缺：%s（缺维不得进入替换排序）" % "/".join(missing))
+    return sum((Decimal(str(dim_scores[d])) for d in THESIS_SCORE_DIMS), Decimal("0"))
+
+
+def min_holding_gate(sessions_held: Optional[int],
+                     invalidation_hit: bool = False,
+                     min_sessions: int = MIN_HOLDING_SESSIONS) -> Tuple[bool, str]:
+    """
+    ACT-008 最低持有期（用户 2026-08-15 裁定）：建仓后 min_sessions 个交易日内，
+    **不得因相对分排序被卖出**；只有失效线/止损触发（invalidation_hit=True）才可离场。
+
+    返回 (可因替换卖出?, 理由)。sessions_held=None（代理成本仓/基线迁移仓，建仓日不可考）
+    视为已过最低期——不能用未知去阻断风险管理，也不能用未知去豁免纪律，
+    故按「已过期」处理并在理由里显式标注，由人工在复盘时校正。
+    """
+    if invalidation_hit:
+        return True, "失效线已触发 -> 风险管理优先于最低持有期，可离场"
+    if sessions_held is None:
+        return True, "建仓日不可考（基线迁移仓）-> 按已过最低持有期处理（须在复盘显式标注）"
+    if sessions_held < min_sessions:
+        return False, ("持有仅 %d 个交易日 < 最低 %d 个 -> 不因相对分卖出"
+                       "（买入理由是多年期论点，不可用数日价格推翻）" % (sessions_held, min_sessions))
+    return True, "持有 %d 个交易日 ≥ 最低 %d 个 -> 可参与替换排序" % (sessions_held, min_sessions)
+
+
 def replacement_gate(candidate_score, weakest_score,
-                     margin: Decimal = REPLACEMENT_MARGIN) -> Tuple[bool, str]:
+                     margin: Decimal = REPLACEMENT_MARGIN,
+                     sessions_held: Optional[int] = None,
+                     invalidation_hit: bool = False,
+                     frozen: bool = None) -> Tuple[bool, str]:
     """
-    ACT-004 满槽替换门（2026-08-04 用户裁定：确定性替换方法论）。
-    候选总分（九维综合评分：信息调研/基本面/事件驱动/产业链/财报/技术/指标/情绪/全球局势）
-    ≥ 最弱持仓总分 + margin 即允许「卖最弱、买候选」；
-    **不再要求旧仓满足「公司破坏」退出条件**——该条件只约束非替换的主动退出（ACT-002/003）。
-    非强制换仓：无更优候选（差距 < margin）则全体持有。
-    新仓建立仍须另过 screen_new_position()（ACT-005/006/007）。
+    ACT-004 满槽替换门（2026-08-04 用户裁定确立，2026-08-15 用户裁定收紧）。
+
+    传入的分数**必须是 thesis_score() 的论点分**（ACT-009），不是九维总分。
+    判定顺序：冻结 -> 最低持有期（ACT-008）-> 分差 ≥ margin。
+    任一不满足则全体持有。新仓建立仍须另过 screen_new_position()（ACT-005/006/007）。
+
+    **边界即停（用户 2026-08-15 裁定的深思原则）**：分差恰好等于 margin 时不自动放行，
+    返回 False 并要求显式复核——「刚好达标」是最该多想一层的地方，不是最该照章执行的地方。
+    LLY→TSM 正是在 +5 恰好达标处机械执行，结果是当日最贵的一次替换。
     """
+    if frozen is None:
+        frozen = REPLACEMENT_FROZEN
+    if frozen:
+        return False, "替换已冻结：%s" % REPLACEMENT_FREEZE_REASON
+
+    hold_ok, hold_why = min_holding_gate(sessions_held, invalidation_hit)
+    if not hold_ok:
+        return False, "最低持有期未满 -> 不替换（%s）" % hold_why
+
     diff = Decimal(str(candidate_score)) - Decimal(str(weakest_score))
-    if diff >= margin:
-        return True, "候选总分高于最弱持仓 %s 分 ≥ 门槛 %s 分 -> 允许替换（卖最弱、买候选）" % (diff, margin)
-    return False, "候选总分仅高 %s 分 < 门槛 %s 分（确定性未显著更高）-> 不替换、全体持有" % (diff, margin)
+    if diff == margin:
+        return False, ("论点分恰好高 %s 分 ＝ 门槛 %s 分（边界）-> 不自动执行，"
+                       "须显式复核后由人裁定（边界即停）" % (diff, margin))
+    if diff > margin:
+        return True, "论点分高于最弱持仓 %s 分 > 门槛 %s 分 -> 允许替换（卖最弱、买候选）" % (diff, margin)
+    return False, "论点分仅高 %s 分 < 门槛 %s 分（确定性未显著更高）-> 不替换、全体持有" % (diff, margin)
 
 
 def screen_new_position(symbol: str, base_pct: Decimal, nav: Decimal,

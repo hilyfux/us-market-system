@@ -8,8 +8,10 @@ market_core — 交易日历、阶段路由、调度对齐校验、市场环境�
   2. 窗口各自声明时区：MORNING 属于 SGT（用户早晨），PREMARKET/INTRADAY/POST_CLOSE
      属于 ET（交易所相对）。不强行统一，而是由一个函数集中换算。
   3. 调度可证明：verify_schedule_alignment() 会证明给定 cron 能命中每个阶段并留有
-     jitter 余量。2026-07 的停摆事故（MORNING 永不触发、POST_CLOSE 被 47s jitter
-     挤出窗口）正是缺少这一层校验。
+     jitter 余量。**归因订正（2026-08-15 用户裁定）**：2026-07 那 6 个交易日的停摆，
+     **实因是 PC（硬件）更换，与 cron 无关**，勿再混为一谈。本层校验针对的是**另一个
+     独立且真实存在**的调度整列缺陷——`0 * * * *` 使 MORNING 永不触发、POST_CLOSE 仅落在
+     +60min 边界被 jitter 挤出窗口——这缺陷该修（已修），但它不是那 6 天停摆的原因。
   4. 分类器确定化：市场环境不再靠判断，由 classify_regime() 按阈值推导，可复现。
 
 兼容性：目标 Python 3.9（launchd 下实际解释器为 CommandLineTools python3 3.9.6），
@@ -32,6 +34,12 @@ EARLY_CLOSE = dtime(13, 0)
 POST_CLOSE_MIN_MIN = 20
 POST_CLOSE_MAX_MIN = 75
 
+# 收盘执行窗（CLOSING）：引け 20 分前 <= et < 引け。in-session の唯一取引執行フェーズ。
+# 引け時刻は日历（TradingCalendar.close_time）から取得し、16:00 をハードコードしない
+# （早收盘日 13:00 → 窓 12:40–13:00、ACT-001）。九维再評価・替換判定・MOC 確定はここで行い、
+# 約定は同日の**検証済み公式引け値**で記帳する（記帳口径は従来通り、決定/約定の時点だけ現実化）。
+CLOSING_LEAD_MIN = 20
+
 PREMARKET_START = dtime(8, 30)   # ET
 MORNING_START = dtime(8, 30)     # SGT
 MORNING_END = dtime(8, 59)       # SGT
@@ -47,7 +55,13 @@ VALID_CHECKPOINT_MINUTES = (0, 30)
 # report_key 使用吸附后的检查点，从而天然幂等（同一宽限窗内重复运行不会重复推送）。
 CHECKPOINT_GRACE_MIN = 10
 
-STAGES = ("MORNING", "PREMARKET", "INTRADAY", "POST_CLOSE")
+# STAGES = ライブ REQUIRED_CRON が「各阶段到達可能」を保証すべき集合。
+# verify_schedule_alignment() はこの集合に対して到達性/脆弱性を判定する。
+# CLOSING（收盘执行窗）は route() が返す独立ステージだが、**この集合にはまだ含めない**：
+# 現行ライブ cron は :00/:30 のみで引け20分前の CLOSING 窓に発火しない＝到達不能が正常（Phase 1）。
+# Phase 2 で OS 定時タスク＋REQUIRED_CRON を同時に変えて CLOSING を編入し、その時に本集合へ加える。
+STAGES = ("MORNING", "PREMARKET", "INTRADAY", "POST_CLOSE", "CLOSING")
+CLOSING_STAGE = "CLOSING"
 NO_STAGE = "NO_ACTIVE_STAGE"
 
 
@@ -170,6 +184,19 @@ def route(now_utc: datetime, cal: TradingCalendar) -> Dict[str, object]:
             "（早收盘日）" if cal.is_early_close(d) else "")
         return out
 
+    # CLOSING —— 收盘执行窗（引け 20 分前 <= et < 引け）。INTRADAY より**先に**切り出す：
+    # CLOSING 窓は連続取引時間帯の部分集合なので、後回しにすると INTRADAY のチェックポイント
+    # 吸附に飲まれる。設計：15:30 の :30 チェックポイントは INTRADAY のまま、15:40–15:59 が CLOSING。
+    # 引け時刻は close_dt（日历由来）から算出＝早收盘日 13:00 は自動追従（窓 12:40–13:00）、16:00 非依存。
+    closing_start_dt = close_dt - timedelta(minutes=CLOSING_LEAD_MIN)
+    if closing_start_dt <= et < close_dt:
+        out["stage"] = CLOSING_STAGE
+        out["reason"] = "ET %s 落入收盘执行窗 %s-%s（引け %d 分前・in-session MOC 執行窓）%s" % (
+            et.strftime("%H:%M:%S"), closing_start_dt.strftime("%H:%M"),
+            close_t.strftime("%H:%M"), CLOSING_LEAD_MIN,
+            "（早收盘日）" if cal.is_early_close(d) else "")
+        return out
+
     if open_dt <= et < close_dt:
         cp = snap_to_checkpoint(et)
         if cp is not None:
@@ -218,6 +245,10 @@ def verify_schedule_alignment(minutes: Set[int], hours: Set[int], cal: TradingCa
     empty = 0
     margins = {s: [] for s in STAGES}
     fragile_detail = []
+    # STAGES 外のステージ（現状 CLOSING）に発火が落ちても KeyError で落ちない兜底。
+    # 到達性契約（unreachable/fragile）には数えないが、命中数は観測可能にする（可観測性）。
+    # Phase 2 で CLOSING を STAGES に編入すれば、そのまま到達性判定の対象になる。
+    other_hits = {}
 
     # 只在 jitter 实际可能取到的区间端点上求值：[0, jitter_s]。
     # 早期版本错误地探测了 nominal+60s（超出 jitter 上界），把「运行晚 1 分钟就
@@ -229,6 +260,9 @@ def verify_schedule_alignment(minutes: Set[int], hours: Set[int], cal: TradingCa
             st = s_lo["stage"]
             if st == NO_STAGE:
                 empty += 1
+                continue
+            if st not in hits:
+                other_hits[st] = other_hits.get(st, 0) + 1
                 continue
             hits[st] += 1
             if s_hi["stage"] == st:
@@ -245,7 +279,7 @@ def verify_schedule_alignment(minutes: Set[int], hours: Set[int], cal: TradingCa
     unreachable = [s for s in STAGES if hits[s] == 0]
     fragile = [s for s in STAGES if hits[s] > 0 and robust[s] < hits[s]]
     return {
-        "hits": hits, "robust": robust, "empty_runs": empty,
+        "hits": hits, "robust": robust, "empty_runs": empty, "other_hits": other_hits,
         "unreachable": unreachable, "fragile": fragile, "fragile_detail": fragile_detail[:5],
         "post_close_margin_min": min(margins["POST_CLOSE"]) if margins["POST_CLOSE"] else None,
         "ok": not unreachable and not fragile,
@@ -322,7 +356,8 @@ def slot_report(positions: List[Dict[str, object]], slot_limit: int = 8) -> Dict
         "sim_open": len(sim),
         "real_tracked": len(real),                  # 真实持仓数（顾问跟踪，不占模拟槽）
         "at_capacity": occupied >= slot_limit,       # 仅指模拟盘是否满槽
-        "note": ("模拟盘满槽：新机会只能通过替换进入（候选需高于最弱持仓 >=5 分且旧仓满足退出规则）"
+        "note": ("模拟盘满槽：新机会只能通过替换进入（须过 selection.replacement_gate：冻结/最低持有期/"
+                 "论点分差门槛，阈值以 lib/selection.py 为准，此处不复述数值防止二重管理）"
                  if occupied >= slot_limit else
                  "模拟盘有 %d 个空槽，可在 regime 仓位上限内直接建仓；真实持仓不占模拟预算"
                  % max(0, slot_limit - occupied)),

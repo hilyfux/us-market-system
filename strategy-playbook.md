@@ -1,7 +1,7 @@
 # Strategy Playbook
 
 VERSION: 2.1.1
-last_updated: 2026-08-13
+last_updated: 2026-08-17
 
 ## CORE
 
@@ -16,7 +16,7 @@ last_updated: 2026-08-13
 ### ACT-001 — Data-gate discipline
 
 - Environment: all
-- Trigger: source conflict over 1%, wrong date, delayed intraday quote over 20 minutes, or missing official close
+- Trigger: source conflict over 1%, wrong date, delayed intraday quote over 20 minutes, or missing official close → block. The data gate uses the **official close** (unchanged); a one-day 2026-08-17 unification that briefly read the intraday price was ruled over-reach and rolled back — the intraday CLOSING-fill price is the trade execution fill only and is not used for the data-gate price check.
 - Action impact: block build/add/reduce/close; output `持有`; record DATA_FAILURE
 - Sample count: system control rule
 - Validation metric: zero trades using failed data
@@ -26,8 +26,8 @@ last_updated: 2026-08-13
 ### ACT-002 — Fundamental fact plus close confirmation
 
 - Environment: all
-- Trigger: verified thesis/fundamental impairment plus official-close technical confirmation
-- Action impact: permit a stop-loss reduction/close with explicit proportion; real action remains unexecuted advice
+- Trigger: verified thesis/fundamental impairment plus technical **official-close** confirmation ("official close < X"); exit judgment/confirmation always uses the official close
+- Action impact: permit a stop-loss reduction/close with explicit proportion; executed at CLOSING (fill price per SYSTEM §4.3; the exit is judged on the official close)
 - Sample count: system control rule
 - Validation metric: every loss exit has both evidence classes
 - Enabled: 2026-07-16
@@ -36,8 +36,8 @@ last_updated: 2026-08-13
 ### ACT-003 — Profit exit quality gate
 
 - Environment: profitable position
-- Trigger: catalyst realization, trend exhaustion, or high-level price/volume risk confirmed at official close
-- Action impact: permit explicit take-profit reduction/close percentage
+- Trigger: catalyst realization, trend exhaustion, or high-level price/volume risk confirmed at close — exit judgment/confirmation always uses the **official close**
+- Action impact: permit explicit take-profit reduction/close percentage; executed at CLOSING (fill price per SYSTEM §4.3; the exit is judged on the official close)
 - Sample count: system control rule
 - Validation metric: no take-profit action on profit percentage alone
 - Enabled: 2026-07-16
@@ -56,7 +56,7 @@ last_updated: 2026-08-13
 ### ACT-005 — Event-timing gate (enter after confirmation, not before)
 
 - Environment: new-position scan (build/add only; never affects holding existing positions)
-- Trigger: the candidate has a binary catalyst (earnings) within 5 trading sessions → block initiation; wait for the post-event confirming official close
+- Trigger: the candidate has a binary catalyst (earnings) within 5 trading sessions → block initiation; wait for the post-event confirming **official close** (the entry is then executed at CLOSING, fill price per SYSTEM §4.3)
 - Action impact: no new build/add inside the blackout; existing positions still `持有`
 - Sample count: promoted from L-010 (ABT post-beat entry = only clearly profitable name; BE/RMBS pre-earnings entries bled)
 - Validation metric: no new position initiated within 5 sessions before its earnings
@@ -109,6 +109,13 @@ last_updated: 2026-08-13
   - Source lesson: extends L-015 (numeric criteria over pattern impressions) — this deliberately does NOT create a discretionary exit, only a criterion-tightening input
   - Explicit anti-overfit note: staged from a single session; if the next two occurrences do not show the give-back, mark REJECTED rather than loosening the definition.
 
+- HYP-003 — The specific numbers `REPLACEMENT_MARGIN=15` and `MIN_HOLDING_SESSIONS=15` (demoted 2026-08-15, self-correction loop)
+  - Environment: replacement engine (ACT-004 replacement path)
+  - Status: the *structures* stay ACTIVE — "a minimum holding period must exist" (ACT-008) and "replacement ranking uses thesis dimensions only" (ACT-009) derive from root-cause analysis (time-axis mismatch; price-derived dimensions mechanically sell weakness), same evidential class as §4.1. The *numbers* 15/15 were chosen on the noise of 4 observations and have no statistical basis — they are hypotheses, not findings, and must not be cited as validated.
+  - Behavior: unchanged — both values remain enforced in `lib/selection.py` (comments mark the HYPOTHESIS status in place); this entry records evidential status honestly, it does not loosen either gate.
+  - Adjudication condition: when 20 replacement claims have been adjudicated (`learning.scorecard(kind="replacement", min_sample=20)` returns sufficient=True — claims ledger `data/claims.jsonl`, five 60-session claims open as of 2026-08-15, first adjudication due 2026-10-29), review the hit rate and re-fit or confirm both numbers via explicit user ruling.
+  - Source: SYSTEM.md §4.2 self-correction loop; lessons.md#L-024/L-026-type guard (do not tune core rules on 4 observations)
+
 New hypotheses need at least three independent trading days or five relevant samples before promotion.
 
 ## REJECTED
@@ -117,6 +124,8 @@ None recorded.
 
 ## Change log
 
+- 2026-08-17 (no version bump, VERSION stays 2.1.1) — **Settlement only, no trades; no rule changed.** All five registered checks adjudicated 未确认 at the official close (MP 58.51 vs 56.15 after an intraday touch of 56.14 on −49% volume; ETN 455.40 vs 449.01 after an intraday touch of 449.00; KTOS 63.29 vs 62.65/62.42 on −38% volume; LNG low 264.74 never reached 262.01; MSFT no line — recorded only at −3.04% on expanded volume, unrealized flips negative). The close-confirmation discipline (ACT-002/003) gains its **3rd and 4th clean intraday-breach-then-close-recovery samples** (MP, ETN) — selling intraday would have exited the book's second-largest winner early. **HYP-002: no new sample** (PWR's highest-close-since-entry came on volume +107%, the opposite shape). **HYP-003 audit evidence filed**: shadow-book snapshot at 8/17 closes shows 4 of 5 replacement pairs at negative delta (RMBS→MSFT −4.86pp, BE→NVDA −5.38pp, GEV→LLY −12.85pp heaviest, NVDA→LNG −2.89pp; only LLY→TSM +0.83pp positive); scorecard 0/20 adjudicated → 判定不能 (L-026), evidence recorded without conclusion, freeze unchanged.
+- 2026-08-15 (no version bump, VERSION stays 2.1.1) — **HYP-003 registered: the numbers 15/15 demoted to HYPOTHESIS.** Part of the SYSTEM.md §4.2 self-correction loop. The replacement-engine *structures* (ACT-008 minimum holding period exists; ACT-009 thesis-only ranking) stay as ruled; the *specific values* `REPLACEMENT_MARGIN=15` / `MIN_HOLDING_SESSIONS=15` were picked on 4 noisy observations and are now tracked as a hypothesis with a mechanical adjudication condition: the replacement scorecard once 20 claims are adjudicated (`data/claims.jsonl`; the five 2026-08-05..08-14 replacements are retro-registered as open 60-session claims, first due 2026-10-29). No behavior change.
 - 2026-08-14 (no version bump, VERSION stays 2.1.1) — **Settlement + one take-profit trade; no rule changed.** **ETN 止盈-减仓50% @451.51** (realized +634.10) — the first exit executed purely off the registered criteria ladder: the 8/13-tightened two-leg criterion (close < 452.50 AND expanding volume) hit exactly one session after the volume leg's absence justified a hold — the ladder discriminated correctly on both nights, a strong L-015 positive pair. **LLY breakout-failure line confirmed** (1180.16 < ex-div-corrected 1183.98): entry-day breakout officially failed on day 5; review trigger only, stop 1113.95 intact — flagged weakest-candidate for the next rescore. **HYP-002 adjudicated AGAINST on its only clean sample** (KTOS closed the 3-session window +3.46% above base; tariff-catalyst confound recorded): stays HYPOTHESIS, confidence lowered, needs fresh clean samples before any promotion path. Close-confirmed-exit evidence (ACT-002/003) unchanged at 2 clean recovery samples.
 - 2026-08-13 (no version bump, VERSION stays 2.1.1) — **Settlement only, no trades.** No CORE/ACT rule changed. Both intraday flags adjudicated at the close: **ETN** hit its registered review line (453.33 < 459.03) but the ACT-003 volume leg was absent (volume −31%) and the preserved 446.50 two-day reduction criterion was untouched → hold, with the next-day line tightened to 452.50-with-volume — the registered criteria ladder was followed rather than a pattern impression (L-015). **KTOS** breached 62.10 intraday (low 61.84) and recovered to close 62.79 on −24% volume → **5th consecutive falsification** of the exhaustion registration and the **second clean intraday-breach-then-close-recovery sample** (after LNG 8/12) — accumulating direct evidence for close-confirmed exits (ACT-002/003). **HYP-002 (缩量新高)**: no new clean sample today (LLY's expanding-volume decline is the opposite shape on the downside; the KTOS 8/11 sample's 3-session give-back window closes at the 8/14 close — adjudicate then); clean-sample count stays 1. HYP-001 unchanged (HYPOTHESIS, lowered confidence).
 - 2026-08-12 (no version bump, VERSION stays 2.1.1) — **Settlement only, no trades.** No CORE/ACT rule changed. All four registered close criteria adjudicated 未确认 with room (LLY 1220.28 vs 1185.71; LNG 268.11 vs 265.16 after an intraday breach to 262.01 — first clean intraday-breach-then-close-recovery sample supporting close-confirmed exits; MP 54.11 vs 52.90; KTOS 63.82 — 4th consecutive falsification of the exhaustion registration). **HYP-002 (缩量新高) clean-sample count stays 1**: today's marginal new high came on volume expanding 23%, the opposite shape, so it is not a sample. HYP-001 unchanged (HYPOTHESIS, lowered confidence).

@@ -12,6 +12,7 @@
 | vix | cboe.com（发行方） ｜ investing.com ｜ google.com/finance ｜ tradingeconomics.com | cboe 必须带缓存参数（曾给六月快照）；investing **仅指数页可用**，其个股报价页陈旧、禁用于 equity_close |
 | us10y | investing.com ｜ cboe.com（^TNX） ｜ tradingeconomics.com ｜ etftrends.com | 多源常差 1bp 内，取两源一致值 |
 | breadth（市场宽度） | stockanalysis.com/markets | 环境分类用、非交易门槛；允许单源但须内部标注 |
+| **closing_window_price（T-20min価＝引け20分前の盤中価、CLOSING約定フィル専用）** | stockanalysis.com ｜ roic.ai ｜ stocktitan.net ｜ stockscan.io | **用途を厳密限定（2026-08-17 用户裁定）**：この盤中価（CLOSING 窓時刻≈15:40 ET）は **CLOSING で約定した取引のフィル価格と、それに由来する保有成本（コスト基準）にのみ**用いる。取得口径＝**≥2 核准源・偏差≤1%・盤中タイムスタンプ**。盤中価ゆえ「At close／Adj.Close 定稿／全日出来高」は**要求しない**（それらは終値専用で盤中に適用不能）。**評価（mark-to-market・NAV）・離場判定・分析・戦略レビュー・データ門の取価には用いない——これらは全て公式收盘（equity_close，POST_CLOSE で更新）**。individual 个股详情页の报价头が「Market open」時に返す现价を用いる。当初 addendum は本価格を全会计書込・評価・データ門・離場まで拡大したが過剰と裁定され差し戻し。≥2核准源の可满足性は selftest `test_price_convention` が机器保证（`approved_for("closing_window_price") ≥ 2`） |
 
 ## 使用规则（P1–P5，机器执行）
 
@@ -30,6 +31,13 @@
 | finance.yahoo.com | 报价页严重陈旧（非延迟） |
 | home.treasury.gov | 所有端点截断 |
 
+> ⚠️ **更正注记（2026-08-15 审计 B2）**：2026-08-11 的 LNG 结算曾以黑名单源 **stockinvest.us** 作为
+> 「双源」的第二源（见 portfolio-ledger `morning_note_2026-08-12` 与 system-state 8/12 MORNING 记录）。
+> 当日值与核准源 stockanalysis 偏差 0.00%、且 stockscan/roic 旁证同值，**数值本身未受影响**，
+> 但按 P2（黑名单源出现即整条记录作废）属**口径违反**；`PriceRecord.validate`（P1–P5）未配线到
+> 实结算路径，故机器未拦截。恒久对策已登记 gap-ledger **G-B2**；源列表的晋升/删除属策略判断，
+> 本注记不改动黑名单本身。
+
 ## 分级晋升/降级
 
 新源须连续 ≥3 个交易日与两个既有核准源零偏差才可入册（先加代码+测试）；
@@ -37,9 +45,11 @@
 
 ## 抓取方法规则（2026-07-28，来自 7/27 结算失败的教训）
 
-- **禁止**：收盘后 60 分钟内抓报价页当正式收盘——缓存必然陷阱（实测 T+31min 得到的是上一交易日）。
-- **标准方法**：**历史页次晨回补**——`/stocks/<sym>/history/`（带缓存参数）+ roic.ai 双源；一次抓取即含近月全部收盘，7/27 回补实测 8/8 双源 ≤0.09% 偏差一次成功。
-- POST_CLOSE 结算窗口内若报价页疑似陈旧（At close 日期≠当日）→ 直接登记 GAP，由次晨 MORNING 用历史页法回补，不做无谓重试。
+> **適用範囲**：本節の三条は **equity_close（正式收盘）** の抓取規則である。equity_close は POST_CLOSE の mark-to-market 評価・結算・検証と、離場判定・分析・データ門の取価に用いる（従来どおり）。**CLOSING約定フィル価格（closing_window_price＝引け20分前の盤中価）には適用しない**——約定フィルは引け20分前の盤中価を≥2核准源・偏差≤1%・盤中タイムスタンプで取得し「At close／定稿／全日出来高」を要求しない（上表）。以下の「收盘后60分／At close 日期≠当日→GAP」は正式收盘の定稿値検証に効く。
+
+- **禁止**：收盘后 60 分钟内抓报价页当正式收盘——缓存必然陷阱（实测 T+31min 得到的是上一交易日）。（正式收盘检证＝POST_CLOSE 専用）
+- **标准方法**：**历史页次晨回补**——`/stocks/<sym>/history/`（带缓存参数）+ roic.ai 双源；一次抓取即含近月全部收盘，7/27 回补实测 8/8 双源 ≤0.09% 偏差一次成功。（正式收盘检证＝POST_CLOSE 専用）
+- POST_CLOSE 结算窗口内若报价页疑似陈旧（At close 日期≠当日）→ 直接登记 GAP，由次晨 MORNING 用历史页法回补，不做无谓重试。（本条は POST_CLOSE 正式收盘检证専用；CLOSING約定フィル価格には課さない）
 
 ## 程序化供应商现状（2026-07-28 实测）
 

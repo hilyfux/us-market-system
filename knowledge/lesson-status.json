@@ -1,0 +1,117 @@
+{
+  "_meta": {
+    "purpose": "教训执行状态登记（SYSTEM.md §4.2 学习闭环）。每条教训必须声明 CODIFIED（附 selftest 测试名）或 PROSE_ONLY（附不可代码化/未代码化的理由）。未声明 = W7 缺陷。",
+    "criteria": "CODIFIED 的唯一标准：tools/selftest.py 里实际存在锁定该教训行为的断言（逐条核对，2026-08-15）。目的在于正直的覆盖率，不在于高覆盖率——散文教训是已知缺口，必须可见（代码化的 L-022 此后零违反，散文的 L-010 被违反 3 次）。",
+    "generated": "2026-08-15",
+    "consumed_by": "tools/preflight.py W7（learning.lesson_enforcement）"
+  },
+  "L-001": {
+    "status": "PROSE_ONLY",
+    "reason": "「任何『修好了』必须指向绿色测试」是过程纪律，约束的是研发行为而非产物状态；selftest 无法断言自己被引用。backtest.sample_sufficiency 体现其精神但不构成本条的执行检查。"
+  },
+  "L-002": {
+    "status": "PROSE_ONLY",
+    "reason": "新建仓侧已由 ACT-005 覆盖（那是 L-010 的代码化）；本条的核心「财报前对既有仓只有『持有』」没有对应断言——是否临近财报属运行时事实，现行 selftest 不检查决策记录。"
+  },
+  "L-003": {
+    "status": "PROSE_ONLY",
+    "reason": "「离场是否经确认价印证」依赖当日市况事实与决策记录，无机器断言；由 RED_PENDING_CLOSE 流程与 ACT-002/003 手续承担。2026-08-17 改訂：確認価の口径は阶段で読替（CLOSING 窓＝T-20min価で確認・執行、POST_CLOSE 検証＝正式收盘）；盘中触价不作成交根拠の安全意图不变。"
+  },
+  "L-004": {
+    "status": "PROSE_ONLY",
+    "reason": "「盘中不得基于降级/无检证行情交易」约束运行时行为，无断言直接锁定；溯源检查（P1–P5：≥2源・偏差≤1%）锁的是取数质量，不是本条。2026-08-17 CLOSING モデル例外：引け20分前の CLOSING 窓に限り≥2核准源・偏差≤1%で検証した T-20min盤中価で執行可（安全は≥2源要件で担保）；无检证な単一源盤中触价トレードの禁止は不変。closing_window_price 口径が sources.md に登録され、≥2核准源が selftest（test_price_convention）で机器保证。"
+  },
+  "L-005": {
+    "status": "PROSE_ONLY",
+    "reason": "「有无已核实的公司减值」依赖人工事实调查，机械不可判；只能靠复盘记录『何种事实会改变结论』。"
+  },
+  "L-006": {
+    "status": "PROSE_ONLY",
+    "reason": "「PROXY 标注是否全链路存在」需审查生成的报告与账本文本，现无 lint 断言（可代码化的候选：report_lint 加 PROXY 一致性检查）。"
+  },
+  "L-007": {
+    "status": "PROSE_ONLY",
+    "reason": "「每个守卫都有一条证明它会失败的测试」是元纪律，无机器化的元断言逐守卫核查（L-023 即其复发实证）。个别守卫的检出力用例（如 P5）是本条的局部执行，不构成全量覆盖。"
+  },
+  "L-008": {
+    "status": "CODIFIED",
+    "test": "ACT-007 高 beta 名义仓折半（10%->5%）",
+    "note": "selftest test_selection；screen_new_position 组合用例（BE 式拒绝）同时覆盖。"
+  },
+  "L-009": {
+    "status": "CODIFIED",
+    "test": "ACT-006 加仓后28.67%>25 -> 拒绝",
+    "note": "论题标签口径见 selection.THEME_TAGS；未登记论题保守拒绝亦有用例。"
+  },
+  "L-010": {
+    "status": "CODIFIED",
+    "test": "ACT-005 距财报3日 -> 封锁新建（边界=5日仍封锁）",
+    "note": "selftest test_selection；事件后放行（-1）与无近端催化放行同样锁定。"
+  },
+  "L-011": {
+    "status": "PROSE_ONLY",
+    "reason": "仍是 playbook HYP-001（1 弱支持 vs 1 全窗口反例），教训本身要求攒样本；未成规则故无可断言的行为。"
+  },
+  "L-012": {
+    "status": "CODIFIED",
+    "test": "ACT-006 加仓后28.67%>25 -> 拒绝",
+    "note": "与 L-009 同一执行点（theme_cap_gate）：本条的增量是「入场端强制」，即建仓前必过门，selftest 组合用例锁定。"
+  },
+  "L-013": {
+    "status": "CODIFIED",
+    "test": "C7 偏离 $5k 必须失败",
+    "note": "sizing_uniformity（SIZE_EXCEPTION 显式豁免用例）＋ refresh_data 视图纯度断言（不含 real/sim 残留）。"
+  },
+  "L-014": {
+    "status": "PROSE_ONLY",
+    "reason": "「共识与最近季度实际偏离 >3 倍拒绝入档」未实现为代码检查，现靠人工比对；是可代码化的候选。"
+  },
+  "L-015": {
+    "status": "PROSE_ONLY",
+    "reason": "「判据数值是否已登记入 alert-state」需审查运行记录，无断言；边界即停（L-025 已代码化部分）不覆盖本条。"
+  },
+  "L-016": {
+    "status": "PROSE_ONLY",
+    "reason": "「部分止盈同一事务内是否写入下一档判据」需审查账务事务与 alert-state 的耦合，现无 lint/断言；可代码化的候选。"
+  },
+  "L-017": {
+    "status": "PROSE_ONLY",
+    "reason": "同源自洽（报价头 vs 历史行 vs 全日成交量）检查未实现为 integrity 代码，仍是 sources.md 的人工手续。2026-08-17 適用範囲：定稿値必須は POST_CLOSE 正式收盘检证専用；CLOSING 窓は盤中 T-20min口径（≥2核准源・偏差≤1%・盤中タイムスタンプ）で全日出来高・定稿値を要求しない。"
+  },
+  "L-018": {
+    "status": "PROSE_ONLY",
+    "reason": "「当日的驱动事实」是否存在依赖人工调查，机械不可判；只能约束记录格式，无现行断言。"
+  },
+  "L-019": {
+    "status": "PROSE_ONLY",
+    "reason": "选股审计中代理成本仓单列是复盘写作规约，无机器断言。"
+  },
+  "L-020": {
+    "status": "PROSE_ONLY",
+    "reason": "「无当日事实→次日复检」本身机械不可判；其结构性同型（到期未复检＝响亮失败）已由 claim 机制＋preflight W6（UNADJUDICATED_CLAIMS）承担，但那是新机制，不是本条散文的直接代码化。"
+  },
+  "L-021": {
+    "status": "PROSE_ONLY",
+    "reason": "P4 cache-buster 存在于 integrity 且注册表标志有断言，但 selftest 缺『无缓存参数即失败』的检出力用例（L-023 只为 P5 补了）；三个陈旧标记（At close/Adj.Close/全日量）依赖人工核对页面。按 L-007 标准不算 CODIFIED。2026-08-17 CLOSING モデル例外：三陈旧标记は POST_CLOSE 正式收盘检证専用；CLOSING 窓の T-20min盤中価は盤中価ゆえ At close/Adj.Close/全日量を要求せず、≥2核准源・偏差≤1%・盤中タイムスタンプで検証する（lessons.md L-021 に明记、test_price_convention が例外文字列を锁定）。"
+  },
+  "L-022": {
+    "status": "CODIFIED",
+    "test": "P5 对无 stamp 的 stockscan.io 有检出力",
+    "note": "STAMP_CHECK_REQUIRED 注册表一致性亦有断言（stocktitan/stockscan）。2026-08-17 適用範囲：第二源の previous close ＝上一交易日正式收盘 突合は POST_CLOSE 正式收盘检证専用（CLOSING の T-20min盤中価は前收盘突合ではなく≥2源・偏差≤1%・盤中タイムスタンプで検証）；CODIFIED テスト（stamp_check 検出力）は POST_CLOSE 検証口径のまま有効・不変。"
+  },
+  "L-023": {
+    "status": "CODIFIED",
+    "test": "P5 对无 stamp 的 stockscan.io 有检出力",
+    "note": "该用例真实构造非数值 expected/actual 的 CheckResult 路径（旧实现在此抛 InvalidOperation）。『每个新分支配失败用例』的元纪律部分仍属过程约束（见 L-007）。"
+  },
+  "L-024": {
+    "status": "CODIFIED",
+    "test": "历史回归：五次替换中至少拦下四次（否则改动无效）",
+    "note": "另有 ACT-008 LLY/NVDA 实况用例、ACT-009 论点分排除技术面/指标用例；RMBS→MSFT +17 仍放行＝显式承认未覆盖。数值 15/15 的地位为 HYPOTHESIS（HYP-003）。"
+  },
+  "L-025": {
+    "status": "CODIFIED",
+    "test": "替换门：恰好+15分（边界）-> 不自动执行，须人工复核",
+    "note": "②边界即停已代码化；①同型停止、③实证优先仍靠 §4.1 深思原则的过程执行——该散文缺口由本文件与 preflight W7 可见化。"
+  }
+}
