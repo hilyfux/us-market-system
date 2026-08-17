@@ -115,6 +115,7 @@ last_reconciled_at: 2026-08-18T03:42:30+08:00
 | INTRADAY+2026-08-17+1000 | 2026-08-17T22:06:24+08:00 | enterprise_wechat | errcode=0 |
 | INTRADAY+2026-08-17+1230 | 2026-08-18T00:36:56+08:00 | enterprise_wechat | errcode=0 |
 | INTRADAY+2026-08-17+1530 | 2026-08-18T03:39:38+08:00 | enterprise_wechat | errcode=0 |
+| POSTCLOSE+2026-08-17 | 2026-08-18T04:46:53+08:00 | enterprise_wechat | errcode=0 |
 
 ## Pending close signals
 
