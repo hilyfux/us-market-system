@@ -4,6 +4,17 @@
 > **VERIFIED**（≥2 源零/微偏差，已入账）｜ **GAP**（未完成结算，须显式补救）｜ **PARTIAL**（部分核实）。
 > 钱包 `valuation_date` 只允许指向本簿中 VERIFIED 的日期。
 
+## 2026-08-18（周二）— PARTIAL（6/8 双源；ABT/LNG 单源；钱包估值未推进，次晨回补后转 VERIFIED）
+
+- 基准：SPY/QQQ/IWM 双源未取（次晨回补）；VIX **15.67**（Cboe 延迟报价 16:20:32 戳，prev 15.19 自洽，暂值、次晨定稿页确认）；US10Y 官方日频未及（缺口沿用）
+- 环境分类：**RISK_ON 维持**（VIX 15.67 < 16；SPY 远高于 50 日参考线）——距 16 边界仅 0.33，破 16 → 上限 75% vs 仓位率 77.4%
+- 持仓收盘：PWR 696.15 ｜ MP 56.67 ｜ KTOS 61.99 ｜ MSFT 481.63 ｜ ETN 431.33 ｜ ABT 112.68 ｜ LNG 273.78 ｜ TSM 413.41
+- 核验：stockanalysis 详情页 8/8「At close: Aug 18, 2026, 4:00 PM EDT」戳、同源自洽（prev+chg=close）、prev 全部等于本簿 8/17 收盘。第二源 6/8：PWR=AV GLOBAL_QUOTE 0.006%｜MP/MSFT/ETN/TSM=Google Finance 0.00%（OHLC 对齐）｜KTOS=stockscan 0.00%（当日戳）。**ABT/LNG 第二源不可得**：AV 日配额耗尽；Google 返回旧缓存（ABT=8/17 页）/盘中快照（LNG 10:38 戳）；stockscan LNG 冻结在 8/17（L-022 同型，按标的登记）；roic 为未结算盘中价；stocktitan 空响应
+- 成交照合：本日无成交（CLOSING 15:41 已运行、无交易）→ 无需照合
+- 入账：**钱包 valuation_date 维持 2026-08-17**（「只指 VERIFIED 行」规则）；8/18 mark-to-market 与影子帐簿 8/18 快照延至次晨回补后完成；8/18 指示性总资产 107,160.09（−1.20%）仅记 run-summary/复盘，不入钱包
+- 补救路径：2026-08-19 MORNING 历史页法（stockanalysis history + roic/stocktitan/stockscan/AV 任一恢复源）回补 8/8 双源 → 推进 valuation_date 至 8/18 → C1–C6 校验 → refresh_data → 影子帐簿定价 → 本节改记 VERIFIED
+
+
 ## 2026-08-17（周一）— VERIFIED（当晚结算，T+~35–50min，POST_CLOSE 窗口内完成，无交易）
 
 - 方法：① **stockanalysis.com 个股详情页报价头**（全部带缓存参数，L-021）为定稿依据；② 第二源 **Alpha Vantage GLOBAL_QUOTE**（8/8 标的 `latest trading day=2026-08-17` 全部命中；配额恰在 8 仓核完后耗尽，QQQ/IWM 与影子标的改单源）。
@@ -215,4 +226,5 @@
 | 2026-07-28 | POST_CLOSE 时 AV 额度耗尽 + 报价页缓存陷阱 | 已关闭（2026-07-29 晨间历史页法回补，VERIFIED） |
 | 2026-07-29 | POST_CLOSE 时 AV 额度耗尽 + 历史页 T+31min 未结算（分歧） | 已关闭（2026-07-30 晨间历史页法 + Google Finance 二源回补，VERIFIED） |
 | 2026-07-30 | POST_CLOSE 时 AV 额度耗尽 + 历史页 T+31min 表内-实时分歧（大波动仓） | 已关闭（2026-07-31 晨间历史页法双源回补，VERIFIED；ABT 止盈-减仓50% 已执行 realized +171.51） |
+| 2026-08-18 | POST_CLOSE 时 AV 日配额耗尽 + 备用二源逐名失效（Google 缓存陈旧/盘中快照、stockscan 按标的冻结、roic 未结算、stocktitan 空响应），ABT/LNG 仅单源 | 未关闭（2026-08-19 晨间历史页法回补，估值未推进、无静默） |
 | 2026-08-06 | **模型额度耗尽致定时任务停摆**，连续 8 个排期槽位未触发；POST_CLOSE 窗口（ET 16:20–17:00）与次晨 MORNING 窗口双双错过 | 已关闭（2026-08-07 SGT 17:30 用户授权离线补结算，AV + stockanalysis compare 双源 0.00%、16/16 前收锚定精确，VERIFIED） |
