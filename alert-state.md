@@ -1,7 +1,7 @@
 # Alert State
 
 schema_version: 2.0
-last_reconciled_at: 2026-08-20T20:41:30+08:00
+last_reconciled_at: 2026-08-21T04:52:00+08:00
 
 ## Rules
 
@@ -78,6 +78,8 @@ last_reconciled_at: 2026-08-20T20:41:30+08:00
 | POSTCLOSE+2026-08-07 | 2026-08-08T04:46:49+08:00 | enterprise_wechat | errcode=0 |
 | MORNING+2026-08-07 | 2026-08-08T08:43:41+08:00 | enterprise_wechat | errcode=0 |
 | HEARTBEAT+2026-08-08 | 2026-08-08T20:03:10+08:00 | enterprise_wechat | errcode=0 |
+| PREMARKET+2026-08-20 | 2026-08-20T20:37:49+08:00 | enterprise_wechat | errcode=0 |
+| POSTCLOSE+2026-08-20 | 2026-08-21T04:51:38+08:00 | enterprise_wechat | errcode=0 |
 | HEARTBEAT+2026-08-09 | 2026-08-09T20:02:35+08:00 | enterprise_wechat | errcode=0 |
 | PREMARKET+2026-08-10 | 2026-08-10T20:38:07+08:00 | enterprise_wechat | errcode=0 |
 | INTRADAY+2026-08-10+1000 | 2026-08-10T22:05:28+08:00 | enterprise_wechat | errcode=0 |
