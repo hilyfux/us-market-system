@@ -3,58 +3,58 @@
 schema_version: 2.0
 base_currency: USD
 initial_capital: 100000.000000
-last_reconciled_at: 2026-08-18T04:55:00+08:00
-valuation_date: 2026-08-17
+last_reconciled_at: 2026-08-21T04:45:00+08:00
+valuation_date: 2026-08-20
 valuation_status: VERIFIED
-valuation_source: 2026-08-17 official regular-session closes, settled SAME NIGHT at T+~35-50min. Primary = stockanalysis.com detail page, header stamped "At close: Aug 17, 2026, 4:00 PM EDT", cache-buster on every request (L-021). Same-source self-consistency verified first (L-017): prev_close + change == close for 8/8 names, and each prev_close equals our recorded 8/14 close (685.78 / 58.74 / 64.58 / 495.40 / 451.51 / 111.25 / 271.64 / 426.35). Second source: Alpha Vantage GLOBAL_QUOTE (latest trading day=2026-08-17 for all 8 names; AV previous closes also all equal our 8/14 book closes, L-022); max cross-source spread 0.034% (MP 58.51/58.49) < 1% limit. No trades today; valuation-only update.
-prior_valuation_date: 2026-08-14 (superseded)
+valuation_source: 2026-08-20 official regular-session closes (POST_CLOSE, valuation caught up after a system-downtime gap — the 2026-08-19 POST_CLOSE never ran, W2 ~4108 min since last run; W1 was STALE by 2 trading days). Primary = Alpha Vantage settled daily series (8/8, latest trading day 2026-08-20; each series' 8/18 row equals our prior VERIFIED 8/18 book, 8/8 exact). Second source = stockanalysis.com "At close: Aug 20, 2026, 4:00 PM EDT" with cache-busters, 8/8 stamped today and every prev_close = our 8/19 series close (L-022 stamp check pass). Cross-source spreads: PWR/KTOS/MSFT/ETN/LNG 0.00%, TSM 0.02%, MP 0.03%, ABT 0.11% — max 0.11% < 1%. No trades (replacement frozen; POST_CLOSE books none); mark-to-market valuation-only update over the 2-day gap.
+prior_valuation_date: 2026-08-18 (superseded; 2026-08-19 never booked — downtime gap, explicit in data/post-close.md)
 
 ## Balances
 
 | item | USD |
 |---|---:|
 | cash | 24191.679512 |
-| TSM market value | 10108.361701 |
-| ETN market value | 5682.637402 |
-| ABT market value | 10629.951467 |
-| PWR market value | 11421.851914 |
-| MP market value | 13037.672658 |
-| KTOS market value | 13483.313688 |
-| MSFT market value | 9854.141996 |
-| LNG market value | 10056.511942 |
-| total market value | 84274.442768 |
-| total assets | 108466.122280 |
-| cumulative P&L | 8466.122280 |
+| TSM market value | 9759.352670 |
+| ETN market value | 5182.131064 |
+| ABT market value | 11005.568126 |
+| PWR market value | 10475.604986 |
+| MP market value | 12261.116698 |
+| KTOS market value | 11968.597930 |
+| MSFT market value | 9870.553600 |
+| LNG market value | 10517.462092 |
+| total market value | 81040.387167 |
+| total assets | 105232.066679 |
+| cumulative P&L | 5232.066679 |
 | realized P&L | -808.321015 |
-| unrealized P&L | 9274.442754 |
-| position ratio | 77.696557% |
+| unrealized P&L | 6040.387153 |
+| position ratio | 77.011114% |
 
 ## Position accounting
 
 | symbol | quantity | cost | cost basis | reference close | market value | unrealized P&L |
 |---|---:|---:|---:|---:|---:|---:|
-| TSM | 23.454908 | 426.35 | 10000.000026 | 430.97 | 10108.361701 | 108.361675 |
-| ETN | 12.478343 | 400.69 | 5000.000000 | 455.40 | 5682.637402 | 682.637402 |
-| ABT | 96.311964 | 103.83 | 10000.000000 | 110.37 | 10629.951467 | 629.951467 |
-| PWR | 15.812950 | 632.39 | 10000.000000 | 722.31 | 11421.851914 | 1421.851914 |
-| MP | 222.828109 | 44.88 | 10000.000000 | 58.51 | 13037.672658 | 3037.672658 |
-| KTOS | 213.040191 | 46.94 | 10000.000000 | 63.29 | 13483.313688 | 3483.313688 |
-| MSFT | 20.514504 | 487.46 | 10000.000120 | 480.35 | 9854.141996 | -145.858124 |
-| LNG | 37.674716 | 265.43 | 9999.999868 | 266.93 | 10056.511942 | 56.512074 |
+| TSM | 23.454908 | 426.35 | 10000.000026 | 416.09 | 9759.352670 | -240.647356 |
+| ETN | 12.478343 | 400.69 | 5000.000000 | 415.29 | 5182.131064 | 182.131064 |
+| ABT | 96.311964 | 103.83 | 10000.000000 | 114.27 | 11005.568126 | 1005.568126 |
+| PWR | 15.812950 | 632.39 | 10000.000000 | 662.47 | 10475.604986 | 475.604986 |
+| MP | 222.828109 | 44.88 | 10000.000000 | 55.025 | 12261.116698 | 2261.116698 |
+| KTOS | 213.040191 | 46.94 | 10000.000000 | 56.18 | 11968.597930 | 1968.597930 |
+| MSFT | 20.514504 | 487.46 | 10000.000120 | 481.15 | 9870.553600 | -129.446520 |
+| LNG | 37.674716 | 265.43 | 9999.999868 | 279.165 | 10517.462092 | 517.462224 |
 
 ## Validation
 
-`cash + market_value = 24191.679512 + 84274.442768 = 108466.122280`
+`cash + market_value = 24191.679512 + 81040.387167 = 105232.066679`
 
-`total_assets - initial_capital = 8466.122280 (+8.4661%)`
+`total_assets - initial_capital = 5232.066679 (+5.2321%)`
 
 `cash traceability (C2): 100000 - 75000.000014 + (-808.321015) = 24191.678971` — stored cash 24191.679512, diff 0.000541 (MSFT + LNG + TSM quantization carries), well inside the USD 0.05 tolerance ✓
 
-`cumulative = realized + unrealized (C6): -808.321015 + 9274.442754 = 8466.121739` vs stored 8466.122280, diff 0.000541 ✓
+`cumulative = realized + unrealized (C6): -808.321015 + 6040.387153 = 5232.066138` vs stored 5232.066679, diff 0.000541 ✓
 
-Accounting difference within the required USD 0.05 tolerance. C1–C7 revalidated at the 2026-08-17 POST_CLOSE settlement (no trades; valuation-only). **ETN carries a `SIZE_EXCEPTION`** — halved to a $5,000 cost basis by the 2026-08-14 止盈-减仓50% (trade 2026-08-14-ETN-止盈减仓50-01); the other 7 positions stay at the uniform $10,000.
+Accounting difference within the required USD 0.05 tolerance. C1–C7 revalidated at the 2026-08-20 POST_CLOSE mark-to-market (valuation caught up 8/18→8/20 after the 8/19 downtime gap; no trades; valuation-only). **ETN carries a `SIZE_EXCEPTION`** — halved to a $5,000 cost basis by the 2026-08-14 止盈-减仓50% (trade 2026-08-14-ETN-止盈减仓50-01); the other 7 positions stay at the uniform $10,000.
 
-**POST_CLOSE 2026-08-18 — PARTIAL settlement (no trades; valuation NOT advanced).** A power/semis-led pullback session. Indicative book value off the 8/18 closes: **107,160.09 (-1.20% day, cum +7.16%)** — recorded in run-summary only, NOT booked. 5/8 red: ETN **-5.29%** (closed below the registered 449.00 reduction-review line on volume +12% -> evaluation CONFIRMED at the close; per the v2.18 stage boundary POST_CLOSE books no trades — decision at 8/19 MORNING, execution if any at 8/19 CLOSING; sector-wide selloff, VRT -6.8%/NVT -7.1%, no company impairment), TSM -4.07% (below the 424.10 informational line, day low 410.77 held above the 406.11 invalidation; 3rd session of the 15-session minimum hold), PWR -3.62% and MP -3.14% (both intraday breaches recovered by the close — 5th/6th positive close-confirmation samples), KTOS -2.05% (price under 62.42 but volume contracted 19% -> not confirmed); greens ABT +2.09%, LNG +2.57% (highest close since entry), MSFT +0.27%. **Dual-source verification 6/8 only** (PWR via AV 0.006%; MP/MSFT/ETN/TSM via Google Finance 0.00% OHLC-exact; KTOS via stockscan 0.00% same-day stamp); ABT/LNG had no usable second source (AV daily quota exhausted; Google served a stale cache for ABT and an intraday snapshot for LNG; stockscan frozen at 8/17 for LNG; roic unsettled intraday print; stocktitan empty response) -> per the two-source rule and the VERIFIED-only valuation_date rule, **the wallet stays at the 2026-08-17 valuation**; the 8/18 mark-to-market and the shadow-book 8/18 snapshot complete at the 8/19 MORNING history-page backfill. Regime **RISK_ON** reconfirmed (VIX 15.67, Cboe delayed quote stamped 16:20 ET, prev 15.19 self-consistent, morning finalization registered) — note only 0.33 to the 16.0 boundary where the ceiling drops to 75% vs the 77.4% indicative ratio. No trades; C1-C7 unchanged on the 8/17 book. MSFT goes ex-dividend 8/20 ($0.91 x 20.514504 = $18.67, third unmodeled instance, cumulative $60.16, still awaiting the user ruling).
+**MORNING 2026-08-19 (valuation backfilled to 2026-08-18) — history-page backfill, no trades.** The remediation registered by last night's PARTIAL settlement is complete: ABT/LNG got their second source this morning (Google Finance settled quotes 112.68/273.78, 0.00% vs the stockanalysis finalized history rows with Adj.Close filled and full-day volume), the other six carry last night's dual-source verification -> **valuation_date advances 2026-08-17 -> 2026-08-18, VERIFIED**. Wallet marks exactly reproduce last night's indicative figure: total assets **108,466.12 -> 107,160.09 (-1,306.03, -1.20% day, cum +7.16%)** vs SPY -0.68% -> -0.52pp (yield-driven selloff, QQQ -1.69%, SOX -4.98%). Benchmarks backfilled dual/settled-stamp: SPY 767.45 / QQQ 717.51 / IWM 300.23 (Google settled, prev all exact vs our 8/17 book); **VIX finalized 15.84** (Google 16:15:01 ET settlement stamp, prev 15.19 self-consistent — supersedes last night's provisional 15.67; intraday high 16.09 touched the CHOPPY boundary) -> **RISK_ON holds at the close, margin to 16.0 now only 0.16** vs position ratio 77.42% (a VIX close >=16 tonight would put the 75% ceiling below the ratio -> new builds blocked, no forced sell). US10Y official daily still unavailable (FRED CSV unreadable in-sandbox; media narrative = long-yield spike) — explicit gap, not booked. Shadow-book 8/18 snapshot (all five priced off At-close stamps, prev exact): RMBS->MSFT **+2.49pp** / BE->NVDA **+2.83pp** / NVDA->LNG **+2.12pp** (all three flip positive as the sold power/AI names crashed: RMBS -6.86%, BE -9.97%, GEV -6.90%) vs GEV->LLY -1.88pp (narrowed from -12.85pp) and LLY->TSM **-6.90pp** (flips negative, LLY +3.60% post-exit vs TSM -3.04%). Single-day swings of 5-13pp across the pairs are direct evidence for L-026: 0/20 adjudicated, no conclusions drawn. **ETN morning review (registered decision point): HOLD the remaining half, no further trim** — see the ticker page for the full reasoning (sector-wide selloff with VRT -6.8%/NVT -7.1%, ETN -5.29% in line with peers; the 8/14 trim fired precisely because the sector explanation failed that day — today it holds; volume +12% is modest vs the +22% trim trigger; thesis intact, position already half-sized at 5.0% NAV and +7.65%). Tonight's registered checks: ETN official close < 428.90 with expanding volume -> exit evaluation (execution, if any, at CLOSING); a second consecutive close < 446.50 with volume -> further-trim evaluation. C1-C7 revalidated post-write (C2/C6 tail diff 0.000541 unchanged); W1 staleness back to 0. Dividend gap carried: 16th registration ($41.49 cumulative; MSFT ex-div 8/20 adds $18.67).\n\n**POST_CLOSE 2026-08-18 — PARTIAL settlement (no trades; valuation NOT advanced).** A power/semis-led pullback session. Indicative book value off the 8/18 closes: **107,160.09 (-1.20% day, cum +7.16%)** — recorded in run-summary only, NOT booked. 5/8 red: ETN **-5.29%** (closed below the registered 449.00 reduction-review line on volume +12% -> evaluation CONFIRMED at the close; per the v2.18 stage boundary POST_CLOSE books no trades — decision at 8/19 MORNING, execution if any at 8/19 CLOSING; sector-wide selloff, VRT -6.8%/NVT -7.1%, no company impairment), TSM -4.07% (below the 424.10 informational line, day low 410.77 held above the 406.11 invalidation; 3rd session of the 15-session minimum hold), PWR -3.62% and MP -3.14% (both intraday breaches recovered by the close — 5th/6th positive close-confirmation samples), KTOS -2.05% (price under 62.42 but volume contracted 19% -> not confirmed); greens ABT +2.09%, LNG +2.57% (highest close since entry), MSFT +0.27%. **Dual-source verification 6/8 only** (PWR via AV 0.006%; MP/MSFT/ETN/TSM via Google Finance 0.00% OHLC-exact; KTOS via stockscan 0.00% same-day stamp); ABT/LNG had no usable second source (AV daily quota exhausted; Google served a stale cache for ABT and an intraday snapshot for LNG; stockscan frozen at 8/17 for LNG; roic unsettled intraday print; stocktitan empty response) -> per the two-source rule and the VERIFIED-only valuation_date rule, **the wallet stays at the 2026-08-17 valuation**; the 8/18 mark-to-market and the shadow-book 8/18 snapshot complete at the 8/19 MORNING history-page backfill. Regime **RISK_ON** reconfirmed (VIX 15.67, Cboe delayed quote stamped 16:20 ET, prev 15.19 self-consistent, morning finalization registered) — note only 0.33 to the 16.0 boundary where the ceiling drops to 75% vs the 77.4% indicative ratio. No trades; C1-C7 unchanged on the 8/17 book. MSFT goes ex-dividend 8/20 ($0.91 x 20.514504 = $18.67, third unmodeled instance, cumulative $60.16, still awaiting the user ruling).
 
 **POST_CLOSE 2026-08-17 — settlement (no trades).** A broad pullback session with the book outperforming (SPY 772.67 −0.47%; QQQ 729.87 −0.16%; IWM 304.06 −0.34%; VIX provisional 15.03 via Cboe delayed quote stamped 16:08 ET, prev 14.25 self-consistent — pre-settlement read, next-morning finalized-page backfill registered; US10Y official daily still lagging, TE intraday ~4.727% internal note only): total assets **108,628.59 → 108,466.12 (−162.47, −0.15%)**, beating SPY by **+0.32pp**. Cumulative P&L **+8.63% → +8.47%** (0.16pp off the ATH). 3/8 green — drivers (mv Δ): PWR **+577.65 (+5.33%, volume +107%, highest close since entry; no company news — KeyBanc upgrade follow-through)**, TSM +108.36 (+1.08%, first session post-entry, day low 426.80 > the 424.10 informational line), ETN +48.54 (+0.86%, Trane data-center collaboration PR; intraday touch of 449.00 recovered by the close); MSFT **−308.74 (−3.04% on 28.3M expanded volume; Guardian "2.2M chip gap" investigation vs WF $700/JPM $625 PT raises — unrealized flips negative to −1.46%, now the book's only losing position)**, KTOS −274.82 (−2.00% on volume −38%; GEK800 F143-ZZ-100 military designation + JASSM EMD award is the day's only company-fact positive among holdings, offset by Truist PT cut 135→104), LNG −177.45 (−1.73%, day low 264.74 never touched the 262.01 first-break line; Mizuho PT 273→300), ABT −84.75 (−0.79%), MP −51.25 (−0.39%, intraday touch of 56.14 recovered to close +4.2% above the 56.15 line on volume −49%). Actions: **all 8 持有, no trades booked** (CLOSING window fired at ET 15:41 with no execution instructions; replacement frozen). Signal adjudications: **all five registered checks NOT confirmed** (MP 56.15 / ETN 449.01 / KTOS 62.65 & 62.42 / LNG 262.01 / MSFT no line — recorded only) — the close-confirmation discipline adds its 3rd and 4th "intraday-break-recovered-by-close" positive samples (MP, ETN). Shadow-book snapshot (8/17 closes): 4 of 5 replacement pairs negative delta — RMBS→MSFT −4.86pp, BE→NVDA −5.38pp, **GEV→LLY −12.85pp (GEV +8.90% since exit vs LLY −3.96%, heaviest adverse datum yet)**, NVDA→LNG −2.89pp; only LLY→TSM +0.83pp positive. Scorecard 0/20 adjudicated → 判定不能 (L-026); evidence filed to the L-020 audit, freeze stays. Regime **RISK_ON** (VIX readings all <16; SPY far above reference lines); position ratio **77.73% → 77.70%**, ceiling 90%; slots 8/8. Carried forward unresolved: the C2 dividend gap ($41.49: ETN 8/7 $27.45 + LLY 8/14 $14.04) — **15th consecutive registration, still awaiting a user ruling, no unilateral model change**; MSFT goes ex-dividend 8/20 ($0.91 × 20.514504 = $18.67 will accrue as a third instance). W1 staleness back to 0.
 
