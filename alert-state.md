@@ -1,7 +1,7 @@
 # Alert State
 
 schema_version: 2.0
-last_reconciled_at: 2026-08-21T04:52:00+08:00
+last_reconciled_at: 2026-08-22T03:46:39+08:00
 
 ## Rules
 
@@ -129,6 +129,11 @@ last_reconciled_at: 2026-08-21T04:52:00+08:00
 | INTRADAY+2026-08-19+0930 | 2026-08-19T21:39:48+08:00 | enterprise_wechat | errcode=0 |
 | INTRADAY+2026-08-19+1000 | 2026-08-19T22:13:56+08:00 | enterprise_wechat | errcode=0 |
 | PREMARKET+2026-08-20 | 2026-08-20T20:37:49+08:00 | enterprise_wechat | errcode=0 |
+| MORNING+2026-08-20 | 2026-08-21T08:47:31+08:00 | enterprise_wechat | errcode=0 |
+| PREMARKET+2026-08-21 | 2026-08-21T20:38:02+08:00 | enterprise_wechat | errcode=0 |
+| INTRADAY+2026-08-21+1000 | 2026-08-21T22:07:26+08:00 | enterprise_wechat | errcode=0 |
+| INTRADAY+2026-08-21+1230 | 2026-08-22T00:36:00+08:00 | enterprise_wechat | errcode=0 |
+| INTRADAY+2026-08-21+1530 | 2026-08-22T03:37:41+08:00 | enterprise_wechat | errcode=0 |
 
 ## Pending close signals
 
